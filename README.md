@@ -1,5 +1,5 @@
 # BaseOkHttp
-OkHttp部分逻辑很蛋疼，我在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
+OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 ### 版本
 1.0
