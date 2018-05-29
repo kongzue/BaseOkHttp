@@ -1,22 +1,49 @@
 # BaseOkHttp
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
-### 版本
-1.0
+<a href="https://github.com/kongzue/BaseOkHttp/">
+<img src="https://img.shields.io/badge/Kongzue%20Dialog-2.0.0-green.svg" alt="BaseOkHttp">
+</a>
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.0/link">
+<img src="https://img.shields.io/badge/Maven-2.0.0-blue.svg" alt="Maven">
+</a>
+<a href="http://www.apache.org/licenses/LICENSE-2.0">
+<img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="Maven">
+</a>
+<a href="http://www.kongzue.com">
+<img src="https://img.shields.io/badge/Homepage-Kongzue.com-brightgreen.svg" alt="Maven">
+</a>
 
-请求成功和错误的返回监听器为同一个新的监听器：ResponseListener，请在ResponseListener中直接判断Exception是否为空（null），若为空即请求成功。
-提供额外方法setHeaders()添加请求头，提供额外方法setSSLInAssetsFileName()设置Https请求证书。
+### Maven仓库或Gradle的引用方式
+Maven仓库：
+```
+<dependency>
+  <groupId>com.kongzue.baseokhttp</groupId>
+  <artifactId>baseokhttp</artifactId>
+  <version>2.0.0</version>
+  <type>pom</type>
+</dependency>
+```
+Gradle：
+在dependencies{}中添加引用：
+```
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.0'
+```
 
-### 请注意
-1) 本封装基于：compile 'com.squareup.okhttp3:okhttp:3.3.1'
-2) 目录中的“CORE”为核心文件，要查看项目源代码请进入该目录即可，本目录下其他文件为演示项目工程文件。
+试用版可以前往 http://fir.im/BaseOkHttp 下载
 
-### 原因
+### 前言
 1) 相比OkHttp更大的灵活性，可选流水线式代码编写方式或模块化代码编写方式
 2) 结束请求后自动回归主线程操作，不需要再做额外处理
 3) 与我们的BaseVolley一致的请求方式标准，更换底层框架再也无需额外的代码
 4) 提供统一返回监听器ResponseListener处理返回数据
 5) 我们可能在加载网络数据前会调用一个例如 progressbarDialog 的加载进度对话框来表示正在加载数据，此时若将“请求成功”和“请求失败”单独放在两个回调函数中，会导致代码臃肿复杂，至少你必须在两个回调函数中都将 progressbarDialog.dismiss(); 掉，而我们使用统一返回监听器就可以避免代码臃肿的问题，更加简洁高效。
+
+### 请注意
+请求成功和错误的返回监听器为同一个新的监听器：ResponseListener，请在ResponseListener中直接判断Exception是否为空（null），若为空即请求成功。
+
+提供额外方法setHeaders()添加请求头，提供额外方法setSSLInAssetsFileName()设置Https请求证书。
+
 
 ### 食用方法
 ```
@@ -24,7 +51,7 @@ OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行�
 ProgressbarDialog progressbarDialog = new ProgressbarDialog(this);
 progressbarDialog.show();
 
-//Http请求范例
+//Http请求范例（me = Activity.this）
 HttpRequest.getInstance(me)
         //自定义请求Header头部信息（选用）
         .setHeaders(new Parameter()
@@ -69,4 +96,44 @@ HttpRequest.getInstance(me,"ssl.crt")
 即可使用Https请求方式。
 
 ### 其他
-BaseVolley除了提供基础的 Get 以及 Post 请求外，还提供了图片下载工具和多文件上传工具，具体可以参考 ImageRequest 类和 MultiFileRequest 类
+BaseVolley除了提供基础的 Get 以及 Post 请求外，还提供了图片下载工具和多文件上传工具，具体可以参考 MultiFileRequest 类，使用方法亦很简单：
+```
+List<File> files = new ArrayList<>();
+files.add(new File(xxx1));
+files.add(new File(xxx2));
+
+//上传范例（me = Activity.this）
+multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new ResponseListener() {
+    @Override
+    public void onResponse(JSONObject main, Exception error) {
+        progressbarDialog.dismiss();
+        if (error == null) {
+            //请求成功处理
+        } else {
+            //请求失败处理
+            Toast.makeText(me, "网络错误，请重试", Toast.LENGTH_SHORT);
+        }
+    }
+});
+```
+
+## 开源协议
+```
+   Copyright Kongzue Dialog
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+```
+
+## 更新日志：
+v2.0.0:
+- 修复bug & 封装；

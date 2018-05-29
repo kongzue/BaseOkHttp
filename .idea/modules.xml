@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/BaseOkHttp.iml" filepath="$PROJECT_DIR$/BaseOkHttp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/BaseOkHttp.iml" filepath="$PROJECT_DIR$/.idea/BaseOkHttp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/baseokhttp/baseokhttp.iml" filepath="$PROJECT_DIR$/baseokhttp/baseokhttp.iml" />
     </modules>
   </component>
 </project>

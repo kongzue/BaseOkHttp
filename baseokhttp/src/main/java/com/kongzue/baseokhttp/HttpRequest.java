@@ -1,10 +1,10 @@
-package com.kongzue.baseokhttp.request;
+package com.kongzue.baseokhttp;
 
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
-import com.kongzue.baseokhttp.BuildConfig;
+import com.kongzue.baseokhttp.exceptions.NetworkErrorException;
 import com.kongzue.baseokhttp.listener.ResponseListener;
 import com.kongzue.baseokhttp.util.Parameter;
 
@@ -32,7 +32,7 @@ import okhttp3.RequestBody;
 /**
  * BaseOkHttp
  * Created by myzcx on 2017/12/27.
- * ver:1.0
+ * ver:2.0
  */
 
 public class HttpRequest {
@@ -56,13 +56,11 @@ public class HttpRequest {
 
     //默认请求创建方法
     public static HttpRequest getInstance(Activity c) {
-        if (httpRequest == null) {
-            synchronized (HttpRequest.class) {
-                if (httpRequest == null) {
-                    httpRequest = new HttpRequest();
-                    context = c;
-                }
+        synchronized (HttpRequest.class) {
+            if (httpRequest == null) {
+                httpRequest = new HttpRequest();
             }
+            context = c;
         }
         return httpRequest;
     }
@@ -136,7 +134,7 @@ public class HttpRequest {
             }
             //请求头处理
             if (parameter != null) {
-                if (!headers.entrySet().isEmpty()) {
+                if (headers != null && !headers.entrySet().isEmpty()) {
                     for (Map.Entry<String, String> entry : headers.entrySet()) {
                         builder.addHeader(entry.getKey(), entry.getValue());
                     }
@@ -152,7 +150,7 @@ public class HttpRequest {
                     context.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            listener.onResponse(null, e);
+                            listener.onResponse(null, new NetworkErrorException());
                         }
                     });
                 }

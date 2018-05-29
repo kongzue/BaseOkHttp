@@ -1,8 +1,9 @@
-package com.kongzue.baseokhttp.request;
+package com.kongzue.baseokhttp;
 
 import android.app.Activity;
 import android.util.Log;
 
+import com.kongzue.baseokhttp.exceptions.NetworkErrorException;
 import com.kongzue.baseokhttp.listener.ResponseListener;
 import com.kongzue.baseokhttp.util.Parameter;
 
@@ -25,7 +26,7 @@ import okhttp3.Response;
 /**
  * 多文件上传
  * Created by myzcx on 2018/1/9.
- * ver:1.0
+ * ver:1.1
  */
 
 public class MultiFileRequest {
@@ -46,13 +47,11 @@ public class MultiFileRequest {
 
     //默认请求创建方法
     public static MultiFileRequest getInstance(Activity c) {
-        if (multiFileRequest == null) {
-            synchronized (MultiFileRequest.class) {
-                if (multiFileRequest == null) {
-                    multiFileRequest = new MultiFileRequest();
-                    context = c;
-                }
+        synchronized (MultiFileRequest.class) {
+            if (multiFileRequest == null) {
+                multiFileRequest = new MultiFileRequest();
             }
+            context = c;
         }
         return multiFileRequest;
     }
@@ -86,7 +85,7 @@ public class MultiFileRequest {
         return this;
     }
 
-    public void doPost(String partUrl, List<File> files, final ResponseListener listener, int requestType) {
+    public void doPost(String partUrl, List<File> files, final ResponseListener listener) {
 
         responseListener = listener;
 
@@ -117,8 +116,8 @@ public class MultiFileRequest {
         MultipartBody requestBody = builder.build();
 
         //创建请求
-        okhttp3.Request request;
-        okhttp3.Request.Builder httpBuilder = new okhttp3.Request.Builder();
+        Request request;
+        Request.Builder httpBuilder = new Request.Builder();
         //请求类型处理
         httpBuilder.url(partUrl);
         httpBuilder.post(requestBody);
@@ -135,12 +134,12 @@ public class MultiFileRequest {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, final IOException e) {
-                Log.i(">>>","上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
+                Log.i(">>>", "上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
                 //回到主线程处理
                 context.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        listener.onResponse(null, e);
+                        listener.onResponse(null, new NetworkErrorException());
                     }
                 });
             }
@@ -148,7 +147,7 @@ public class MultiFileRequest {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 final String result = response.body().string();
-                Log.i(">>>","上传成功：response = " + result);
+                Log.i(">>>", "上传成功：response = " + result);
                 try {
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
