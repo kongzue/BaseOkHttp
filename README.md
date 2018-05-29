@@ -119,7 +119,7 @@ multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new Re
 
 ## 开源协议
 ```
-   Copyright Kongzue Dialog
+   Copyright Kongzue BaseOkHttp
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
