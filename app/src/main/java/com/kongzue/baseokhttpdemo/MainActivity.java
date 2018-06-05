@@ -34,13 +34,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 resultHttp.setText("正在请求...");
-                HttpRequest.getInstance(me).postRequest("https://www.apiopen.top/femaleNameApi", new Parameter()
+                HttpRequest.POST(me, "https://www.apiopen.top/femaleNameApi", new Parameter()
                                 .add("page", "1")
                         , new ResponseListener() {
                             @Override
-                            public void onResponse(JSONObject main, Exception error) {
+                            public void onResponse(String response, Exception error) {
                                 if (error == null) {
-                                    resultHttp.setText(main.toString());
+                                    resultHttp.setText(response);
                                 } else {
                                     resultHttp.setText("");
                                     Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT);

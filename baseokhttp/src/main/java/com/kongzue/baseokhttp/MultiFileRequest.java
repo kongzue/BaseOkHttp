@@ -154,7 +154,7 @@ public class MultiFileRequest {
                         @Override
                         public void run() {
                             try {
-                                listener.onResponse(new JSONObject(result), null);
+                                listener.onResponse(result, null);
                             } catch (Exception e) {
                                 listener.onResponse(null, e);
                             }

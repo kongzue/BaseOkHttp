@@ -7,5 +7,5 @@ import org.json.JSONObject;
  */
 
 public interface ResponseListener {
-    void onResponse(JSONObject main, Exception error);
+    void onResponse(String response, Exception error);
 }

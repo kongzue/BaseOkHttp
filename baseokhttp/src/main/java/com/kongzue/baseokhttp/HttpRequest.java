@@ -65,6 +65,30 @@ public class HttpRequest {
         return httpRequest;
     }
 
+    //快速请求创建方法
+    public static HttpRequest POST(Activity c, String partUrl, Parameter parameter, ResponseListener listener) {
+        synchronized (HttpRequest.class) {
+            if (httpRequest == null) {
+                httpRequest = new HttpRequest();
+            }
+            context = c;
+            httpRequest.postRequest(partUrl, parameter, listener);
+        }
+        return httpRequest;
+    }
+
+    //快速请求创建方法
+    public static HttpRequest GET(Activity c, String partUrl, Parameter parameter, ResponseListener listener) {
+        synchronized (HttpRequest.class) {
+            if (httpRequest == null) {
+                httpRequest = new HttpRequest();
+            }
+            context = c;
+            httpRequest.getRequest(partUrl, parameter, listener);
+        }
+        return httpRequest;
+    }
+
     //信任指定证书的Https请求
     public static HttpRequest getInstance(Activity c, String SSLFileNameInAssets) {
         if (httpRequest == null) {
@@ -110,7 +134,7 @@ public class HttpRequest {
     private void doRequest(final String partUrl, final Parameter parameter, final ResponseListener listener, int requestType) {
 
         if (BuildConfig.DEBUG)
-            Log.i(">>>", "buildRequest:" + partUrl + "\nparameter:" + parameter.toParameterString());
+            Log.i("<<<", "buildRequest:" + partUrl + "\nparameter:" + parameter.toParameterString());
 
         try {
             OkHttpClient okHttpClient;
@@ -166,7 +190,7 @@ public class HttpRequest {
                         @Override
                         public void run() {
                             try {
-                                listener.onResponse(new JSONObject(strResponse), null);
+                                listener.onResponse(strResponse, null);
                             } catch (Exception e) {
                                 listener.onResponse(null, e);
                             }

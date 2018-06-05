@@ -2,10 +2,10 @@
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 <a href="https://github.com/kongzue/BaseOkHttp/">
-<img src="https://img.shields.io/badge/BaseOkHttp-2.0.1-green.svg" alt="BaseOkHttp">
+<img src="https://img.shields.io/badge/BaseOkHttp-2.0.2-green.svg" alt="BaseOkHttp">
 </a>
-<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.1/link">
-<img src="https://img.shields.io/badge/Maven-2.0.1-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.2/link">
+<img src="https://img.shields.io/badge/Maven-2.0.2-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -20,14 +20,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.baseokhttp</groupId>
   <artifactId>baseokhttp</artifactId>
-  <version>2.0.1</version>
+  <version>2.0.2</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.1'
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.2'
 implementation 'com.squareup.okhttp3:okhttp:3.3.1'
 ```
 
@@ -45,6 +45,22 @@ implementation 'com.squareup.okhttp3:okhttp:3.3.1'
 
 提供额外方法setHeaders()添加请求头，提供额外方法setSSLInAssetsFileName()设置Https请求证书。
 
+### 快速使用
+```
+HttpRequest.POST(me, "https://www.apiopen.top/femaleNameApi", new Parameter()
+                .add("page", "1")
+        , new ResponseListener() {
+            @Override
+            public void onResponse(String response, Exception error) {
+                if (error == null) {
+                    resultHttp.setText(response);
+                } else {
+                    resultHttp.setText("");
+                    Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT);
+                }
+            }
+        });
+```
 
 ### 食用方法
 ```
@@ -67,7 +83,7 @@ HttpRequest.getInstance(me)
                         .add("key4", "value4"),
                 new ResponseListener() {
                     @Override
-                    public void onResponse(JSONObject main, Exception error) {
+                    public void onResponse(String response, Exception error) {
                         //关闭进度对话框
                         progressbarDialog.dismiss();
 
@@ -106,7 +122,7 @@ files.add(new File(xxx2));
 //上传范例（me = Activity.this）
 multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new ResponseListener() {
     @Override
-    public void onResponse(JSONObject main, Exception error) {
+    public void onResponse(String response, Exception error) {
         progressbarDialog.dismiss();
         if (error == null) {
             //请求成功处理
@@ -136,5 +152,12 @@ multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new Re
 ```
 
 ## 更新日志：
+v2.0.2:
+- 提供快速使用方式；
+- 全局返回参数改为String；
+
+v2.0.1:
+- 修复bug；
+
 v2.0.0:
 - 修复bug & 封装；
