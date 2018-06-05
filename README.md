@@ -28,6 +28,7 @@ Gradle：
 在dependencies{}中添加引用：
 ```
 implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.0'
+implementation 'com.squareup.okhttp3:okhttp:3.3.1'
 ```
 
 试用版可以前往 http://fir.im/BaseOkHttp 下载
