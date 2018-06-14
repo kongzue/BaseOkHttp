@@ -2,10 +2,10 @@
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 <a href="https://github.com/kongzue/BaseOkHttp/">
-<img src="https://img.shields.io/badge/BaseOkHttp-2.0.2-green.svg" alt="BaseOkHttp">
+<img src="https://img.shields.io/badge/BaseOkHttp-2.0.4-green.svg" alt="BaseOkHttp">
 </a>
-<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.2/link">
-<img src="https://img.shields.io/badge/Maven-2.0.2-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.4/link">
+<img src="https://img.shields.io/badge/Maven-2.0.4-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -20,14 +20,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.baseokhttp</groupId>
   <artifactId>baseokhttp</artifactId>
-  <version>2.0.2</version>
+  <version>2.0.4</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.2'
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.4'
 implementation 'com.squareup.okhttp3:okhttp:3.3.1'
 ```
 
@@ -152,6 +152,12 @@ multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new Re
 ```
 
 ## 更新日志：
+v2.0.4:
+- 提供参数“HttpRequest.serviceUrl = (String)”以设置是否设置全局服务器地址，其效果是会自动在所有请求地址前添加 serviceUrl 以减少重复代码量；
+
+v2.0.3:
+- 提供参数“HttpRequest.DEBUGMODE = (boolean)”以设置是否全局打印测试数据；
+
 v2.0.2:
 - 提供快速使用方式；
 - 全局返回参数改为String；

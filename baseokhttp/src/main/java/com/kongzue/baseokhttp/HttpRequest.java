@@ -36,24 +36,30 @@ import okhttp3.RequestBody;
  */
 
 public class HttpRequest {
-
+    
+    //是否开启调试模式
+    public static boolean DEBUGMODE = false;
+    
+    //默认服务器地址
+    public static String serviceUrl = "";
+    
     private static int GET_REQUEST = 1;
     private static int POST_REQUEST = 0;
-
+    
     //Https请求需要传入Assets目录下的证书文件名称
     private String SSLInAssetsFileName;
-
+    
     private Parameter headers;
-
+    
     private static OkHttpClient okHttpClient;
     private static Activity context;
-
+    
     //单例
     private static HttpRequest httpRequest;
-
+    
     private HttpRequest() {
     }
-
+    
     //默认请求创建方法
     public static HttpRequest getInstance(Activity c) {
         synchronized (HttpRequest.class) {
@@ -64,7 +70,7 @@ public class HttpRequest {
         }
         return httpRequest;
     }
-
+    
     //快速请求创建方法
     public static HttpRequest POST(Activity c, String partUrl, Parameter parameter, ResponseListener listener) {
         synchronized (HttpRequest.class) {
@@ -76,7 +82,7 @@ public class HttpRequest {
         }
         return httpRequest;
     }
-
+    
     //快速请求创建方法
     public static HttpRequest GET(Activity c, String partUrl, Parameter parameter, ResponseListener listener) {
         synchronized (HttpRequest.class) {
@@ -88,7 +94,7 @@ public class HttpRequest {
         }
         return httpRequest;
     }
-
+    
     //信任指定证书的Https请求
     public static HttpRequest getInstance(Activity c, String SSLFileNameInAssets) {
         if (httpRequest == null) {
@@ -102,40 +108,40 @@ public class HttpRequest {
         }
         return httpRequest;
     }
-
+    
     public String getSSLInAssetsFileName() {
         return SSLInAssetsFileName;
     }
-
+    
     public HttpRequest setSSLInAssetsFileName(String SSLInAssetsFileName) {
         this.SSLInAssetsFileName = SSLInAssetsFileName;
         return this;
     }
-
+    
     public Parameter getHeaders() {
         return headers;
     }
-
+    
     public HttpRequest setHeaders(Parameter headers) {
         this.headers = headers;
         return this;
     }
-
+    
     public void postRequest(String partUrl, final Parameter parameter,
                             final ResponseListener listener) {
         doRequest(partUrl, parameter, listener, POST_REQUEST);
     }
-
+    
     public void getRequest(String partUrl, final Parameter parameter,
                            final ResponseListener listener) {
         doRequest(partUrl, parameter, listener, GET_REQUEST);
     }
-
+    
     private void doRequest(final String partUrl, final Parameter parameter, final ResponseListener listener, int requestType) {
-
-        if (BuildConfig.DEBUG)
-            Log.i("<<<", "buildRequest:" + partUrl + "\nparameter:" + parameter.toParameterString());
-
+        
+        if (DEBUGMODE)
+            Log.i("<<<", "buildRequest:" + serviceUrl + partUrl + "\nparameter:" + parameter.toParameterString());
+        
         try {
             OkHttpClient okHttpClient;
             if (SSLInAssetsFileName == null || SSLInAssetsFileName.isEmpty()) {
@@ -143,17 +149,17 @@ public class HttpRequest {
             } else {
                 okHttpClient = getOkHttpClient(context, context.getAssets().open(SSLInAssetsFileName));
             }
-
+            
             RequestBody requestBody = parameter.toOkHttpParameter();
-
+            
             //创建请求
             okhttp3.Request request;
             okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
             //请求类型处理
             if (requestType == GET_REQUEST) {
-                builder.url(partUrl + "?" + parameter.toParameterString());
+                builder.url(serviceUrl + partUrl + "?" + parameter.toParameterString());
             } else {
-                builder.url(partUrl);
+                builder.url(serviceUrl + partUrl);
                 builder.post(requestBody);
             }
             //请求头处理
@@ -165,11 +171,11 @@ public class HttpRequest {
                 }
             }
             request = builder.build();
-
+            
             okHttpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, final IOException e) {
-                    Log.e(">>>", "failure:" + partUrl + "\nparameter:" + parameter.toParameterString() + "\ninfo:" + e);
+                    Log.e(">>>", "failure:" + serviceUrl+partUrl + "\nparameter:" + parameter.toParameterString() + "\ninfo:" + e);
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
                         @Override
@@ -178,13 +184,13 @@ public class HttpRequest {
                         }
                     });
                 }
-
+                
                 @Override
                 public void onResponse(Call call, okhttp3.Response response) throws IOException {
                     final String strResponse = response.body().string();
-                    if (BuildConfig.DEBUG)
-                        Log.i(">>>", "request:" + partUrl + "\nparameter:" + parameter.toParameterString() + "\nresponse:" + strResponse);
-
+                    if (DEBUGMODE)
+                        Log.i(">>>", "request:" + serviceUrl+partUrl + "\nparameter:" + parameter.toParameterString() + "\nresponse:" + strResponse);
+                    
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
                         @Override
@@ -201,9 +207,9 @@ public class HttpRequest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        
     }
-
+    
     public static OkHttpClient getOkHttpClient(Context context, InputStream... certificates) {
         if (okHttpClient == null) {
             File sdcache = context.getExternalCacheDir();
@@ -220,7 +226,7 @@ public class HttpRequest {
         }
         return okHttpClient;
     }
-
+    
     private static SSLSocketFactory getSSLSocketFactory(InputStream... certificates) {
         try {
             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
@@ -230,7 +236,7 @@ public class HttpRequest {
             for (InputStream certificate : certificates) {
                 String certificateAlias = Integer.toString(index++);
                 keyStore.setCertificateEntry(certificateAlias, certificateFactory.generateCertificate(certificate));
-
+                
                 try {
                     if (certificate != null)
                         certificate.close();

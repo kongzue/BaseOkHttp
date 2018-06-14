@@ -23,6 +23,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static com.kongzue.baseokhttp.HttpRequest.DEBUGMODE;
+import static com.kongzue.baseokhttp.HttpRequest.serviceUrl;
+
 /**
  * 多文件上传
  * Created by myzcx on 2018/1/9.
@@ -101,7 +104,7 @@ public class MultiFileRequest {
                     name = fileNames.get(i);
                 }
                 builder.addFormDataPart(name, f.getName(), RequestBody.create(MEDIA_TYPE_PNG, f));
-                Log.i(">>>", "添加了一张图片：" + "img" + (i + 1) + ":" + f.getName());
+                if (DEBUGMODE)Log.i(">>>", "添加了一张图片：" + "img" + (i + 1) + ":" + f.getName());
             }
         }
 
@@ -119,7 +122,7 @@ public class MultiFileRequest {
         Request request;
         Request.Builder httpBuilder = new Request.Builder();
         //请求类型处理
-        httpBuilder.url(partUrl);
+        httpBuilder.url(serviceUrl+partUrl);
         httpBuilder.post(requestBody);
         //请求头处理
         if (parameter != null) {
@@ -134,7 +137,7 @@ public class MultiFileRequest {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, final IOException e) {
-                Log.i(">>>", "上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
+                if (DEBUGMODE)Log.i(">>>", "上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
                 //回到主线程处理
                 context.runOnUiThread(new Runnable() {
                     @Override
@@ -147,7 +150,7 @@ public class MultiFileRequest {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 final String result = response.body().string();
-                Log.i(">>>", "上传成功：response = " + result);
+                if (DEBUGMODE)Log.i(">>>", "上传成功：response = " + result);
                 try {
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
