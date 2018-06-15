@@ -137,10 +137,17 @@ public class HttpRequest {
         doRequest(partUrl, parameter, listener, GET_REQUEST);
     }
     
-    private void doRequest(final String partUrl, final Parameter parameter, final ResponseListener listener, int requestType) {
+    private String postUrl;
+    
+    private void doRequest(final String url, final Parameter parameter, final ResponseListener listener, int requestType) {
+        
+        postUrl = url;
+        if (!postUrl.startsWith("http")) {
+            postUrl = serviceUrl + postUrl;
+        }
         
         if (DEBUGMODE)
-            Log.i("<<<", "buildRequest:" + serviceUrl + partUrl + "\nparameter:" + parameter.toParameterString());
+            Log.i("<<<", "buildRequest:" + postUrl + "\nparameter:" + parameter.toParameterString());
         
         try {
             OkHttpClient okHttpClient;
@@ -157,9 +164,9 @@ public class HttpRequest {
             okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
             //请求类型处理
             if (requestType == GET_REQUEST) {
-                builder.url(serviceUrl + partUrl + "?" + parameter.toParameterString());
+                builder.url(postUrl + "?" + parameter.toParameterString());
             } else {
-                builder.url(serviceUrl + partUrl);
+                builder.url(postUrl);
                 builder.post(requestBody);
             }
             //请求头处理
@@ -175,7 +182,7 @@ public class HttpRequest {
             okHttpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, final IOException e) {
-                    Log.e(">>>", "failure:" + serviceUrl+partUrl + "\nparameter:" + parameter.toParameterString() + "\ninfo:" + e);
+                    Log.e(">>>", "failure:" + postUrl + "\nparameter:" + parameter.toParameterString() + "\ninfo:" + e);
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
                         @Override
@@ -189,7 +196,7 @@ public class HttpRequest {
                 public void onResponse(Call call, okhttp3.Response response) throws IOException {
                     final String strResponse = response.body().string();
                     if (DEBUGMODE)
-                        Log.i(">>>", "request:" + serviceUrl+partUrl + "\nparameter:" + parameter.toParameterString() + "\nresponse:" + strResponse);
+                        Log.i(">>>", "request:" + postUrl + "\nparameter:" + parameter.toParameterString() + "\nresponse:" + strResponse);
                     
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {

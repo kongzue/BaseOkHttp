@@ -33,21 +33,21 @@ import static com.kongzue.baseokhttp.HttpRequest.serviceUrl;
  */
 
 public class MultiFileRequest {
-
+    
     private Parameter headers;
     private static Activity context;
-
+    
     private static final MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");
     private final OkHttpClient client = new OkHttpClient();
     private ResponseListener responseListener;
     private Parameter parameter;
-
+    
     //单例
     private static MultiFileRequest multiFileRequest;
-
+    
     private MultiFileRequest() {
     }
-
+    
     //默认请求创建方法
     public static MultiFileRequest getInstance(Activity c) {
         synchronized (MultiFileRequest.class) {
@@ -58,40 +58,46 @@ public class MultiFileRequest {
         }
         return multiFileRequest;
     }
-
+    
     public Parameter getParameter() {
         return parameter;
     }
-
+    
     public MultiFileRequest setParameter(Parameter parameter) {
         this.parameter = parameter;
         return this;
     }
-
+    
     public Parameter getHeaders() {
         return headers;
     }
-
+    
     public MultiFileRequest setHeaders(Parameter headers) {
         this.headers = headers;
         return this;
     }
-
+    
     private List<String> fileNames;
-
+    
     public List<String> getFileName() {
         return fileNames;
     }
-
+    
     public MultiFileRequest setFileName(List<String> fileNames) {
         this.fileNames = fileNames;
         return this;
     }
-
-    public void doPost(String partUrl, List<File> files, final ResponseListener listener) {
-
+    
+    private String postUrl;
+    
+    public void doPost(String url, List<File> files, final ResponseListener listener) {
+        
+        postUrl = url;
+        if (!postUrl.startsWith("http")) {
+            postUrl = serviceUrl + postUrl;
+        }
         responseListener = listener;
-
+        
         // mImgUrls为存放图片的url集合
         MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         for (int i = 0; i < files.size(); i++) {
@@ -104,10 +110,10 @@ public class MultiFileRequest {
                     name = fileNames.get(i);
                 }
                 builder.addFormDataPart(name, f.getName(), RequestBody.create(MEDIA_TYPE_PNG, f));
-                if (DEBUGMODE)Log.i(">>>", "添加了一张图片：" + "img" + (i + 1) + ":" + f.getName());
+                if (DEBUGMODE) Log.i(">>>", "添加了一张图片：" + "img" + (i + 1) + ":" + f.getName());
             }
         }
-
+        
         if (parameter != null) {
             if (!parameter.entrySet().isEmpty()) {
                 for (Map.Entry<String, String> entry : parameter.entrySet()) {
@@ -115,14 +121,14 @@ public class MultiFileRequest {
                 }
             }
         }
-
+        
         MultipartBody requestBody = builder.build();
-
+        
         //创建请求
         Request request;
         Request.Builder httpBuilder = new Request.Builder();
         //请求类型处理
-        httpBuilder.url(serviceUrl+partUrl);
+        httpBuilder.url(postUrl);
         httpBuilder.post(requestBody);
         //请求头处理
         if (parameter != null) {
@@ -133,11 +139,12 @@ public class MultiFileRequest {
             }
         }
         request = httpBuilder.build();
-
+        
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, final IOException e) {
-                if (DEBUGMODE)Log.i(">>>", "上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
+                if (DEBUGMODE)
+                    Log.i(">>>", "上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
                 //回到主线程处理
                 context.runOnUiThread(new Runnable() {
                     @Override
@@ -146,11 +153,11 @@ public class MultiFileRequest {
                     }
                 });
             }
-
+            
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 final String result = response.body().string();
-                if (DEBUGMODE)Log.i(">>>", "上传成功：response = " + result);
+                if (DEBUGMODE) Log.i(">>>", "上传成功：response = " + result);
                 try {
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
