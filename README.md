@@ -162,7 +162,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-本项目中使用的网络请求底层框架为square.okHttp3(https://github.com/square/okhttp)，感谢其为开源做出的贡献：
+本项目中使用的网络请求底层框架为square.okHttp3(https://github.com/square/okhttp )，感谢其为开源做出的贡献：
 
 相关协议如下：
 ```
