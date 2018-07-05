@@ -2,10 +2,10 @@
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 <a href="https://github.com/kongzue/BaseOkHttp/">
-<img src="https://img.shields.io/badge/BaseOkHttp-2.0.7-green.svg" alt="BaseOkHttp">
+<img src="https://img.shields.io/badge/BaseOkHttp-2.0.8-green.svg" alt="BaseOkHttp">
 </a>
-<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.7/link">
-<img src="https://img.shields.io/badge/Maven-2.0.7-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.8/link">
+<img src="https://img.shields.io/badge/Maven-2.0.8-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -20,14 +20,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.baseokhttp</groupId>
   <artifactId>baseokhttp</artifactId>
-  <version>2.0.7</version>
+  <version>2.0.8</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.7'
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.8'
 ```
 
 试用版可以前往 http://fir.im/BaseOkHttp 下载
@@ -124,6 +124,7 @@ HttpRequest.getInstance(me,"ssl.crt")
 即可使用Https请求方式。
 
 ### 其他
+1) 多图片表单上传
 BaseVolley除了提供基础的 Get 以及 Post 请求外，还提供了图片下载工具和多文件上传工具，具体可以参考 MultiFileRequest 类，使用方法亦很简单：
 ```
 List<File> files = new ArrayList<>();
@@ -140,6 +141,22 @@ multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new Re
         } else {
             //请求失败处理
             Toast.makeText(me, "网络错误，请重试", Toast.LENGTH_SHORT);
+        }
+    }
+});
+```
+
+2) 全局返回拦截器
+使用如下代码可以设置全局返回数据监听拦截器，return true 可返回请求继续处理，return false 即拦截掉不会继续返回原请求进行处理；
+```
+HttpRequest.setResponseInterceptListener(new ResponseInterceptListener() {
+    @Override
+    public boolean onResponse(String url, String response, Exception error) {
+        if (error!=null){
+            return true;
+        }else{
+            Log.i("!!!", "onResponse: "+response);
+            return true;
         }
     }
 });
@@ -180,6 +197,12 @@ limitations under the License.
 ```
 
 ## 更新日志：
+v2.0.8：
+- 新增全局拦截器 ResponseInterceptListener，可进行全局请求拦截操作
+- 现在可以通过 setSSLInAssetsFileName(String fileName) 直接设置 Https 证书目录；
+- 现在可以通过 HttpRequest.httpsVerifyServiceUrl 决定是否在 Https 证书请求时验证 Hostname；
+- 修复多请求并发时可能出现的日志混乱问题；
+
 v2.0.7：
 - 修复bug；
 

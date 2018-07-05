@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.kongzue.baseokhttp.exceptions.NetworkErrorException;
+import com.kongzue.baseokhttp.listener.ResponseInterceptListener;
 import com.kongzue.baseokhttp.listener.ResponseListener;
 import com.kongzue.baseokhttp.util.Parameter;
 
@@ -19,7 +20,9 @@ import java.security.cert.CertificateFactory;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -47,7 +50,13 @@ public class HttpRequest {
     private static int POST_REQUEST = 0;
     
     //Https请求需要传入Assets目录下的证书文件名称
-    private String SSLInAssetsFileName;
+    private static String SSLInAssetsFileName;
+    
+    //Https请求是否需要Hostname验证，请保证serviceUrl中即Hostname地址
+    private static boolean httpsVerifyServiceUrl = false;
+    
+    //全局拦截器
+    private static ResponseInterceptListener responseInterceptListener;
     
     private Parameter headers;
     
@@ -60,7 +69,8 @@ public class HttpRequest {
     private HttpRequest() {
     }
     
-    //默认请求创建方法
+    //默认请求创建方法（不再推荐使用）
+    @Deprecated
     public static HttpRequest getInstance(Activity c) {
         synchronized (HttpRequest.class) {
             if (httpRequest == null) {
@@ -95,29 +105,6 @@ public class HttpRequest {
         return httpRequest;
     }
     
-    //信任指定证书的Https请求
-    public static HttpRequest getInstance(Activity c, String SSLFileNameInAssets) {
-        if (httpRequest == null) {
-            synchronized (HttpRequest.class) {
-                if (httpRequest == null) {
-                    httpRequest = new HttpRequest();
-                    httpRequest.context = c;
-                    httpRequest.SSLInAssetsFileName = SSLFileNameInAssets;
-                }
-            }
-        }
-        return httpRequest;
-    }
-    
-    public String getSSLInAssetsFileName() {
-        return SSLInAssetsFileName;
-    }
-    
-    public HttpRequest setSSLInAssetsFileName(String SSLInAssetsFileName) {
-        this.SSLInAssetsFileName = SSLInAssetsFileName;
-        return this;
-    }
-    
     public Parameter getHeaders() {
         return headers;
     }
@@ -140,21 +127,21 @@ public class HttpRequest {
     private String postUrl;
     
     private void doRequest(final String url, final Parameter parameter, final ResponseListener listener, int requestType) {
-        
-        postUrl = url;
-        if (!postUrl.startsWith("http")) {
-            postUrl = serviceUrl + postUrl;
-        }
-        
-        if (DEBUGMODE)
-            Log.i("<<<", "buildRequest:" + postUrl + "\nparameter:" + parameter.toParameterString());
-        
         try {
             OkHttpClient okHttpClient;
             if (SSLInAssetsFileName == null || SSLInAssetsFileName.isEmpty()) {
                 okHttpClient = new OkHttpClient();
             } else {
                 okHttpClient = getOkHttpClient(context, context.getAssets().open(SSLInAssetsFileName));
+            }
+            
+            postUrl = url;
+            
+            if (DEBUGMODE)
+                Log.i("<<<", "创建请求:" + postUrl + "\nparameter:" + parameter.toParameterString());
+            
+            if (!postUrl.startsWith("http")) {
+                postUrl = serviceUrl + postUrl;
             }
             
             RequestBody requestBody = parameter.toOkHttpParameter();
@@ -179,15 +166,24 @@ public class HttpRequest {
             }
             request = builder.build();
             
+            final String finalPostUrl = postUrl;
+            
             okHttpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, final IOException e) {
-                    Log.e(">>>", "failure:" + postUrl + "\nparameter:" + parameter.toParameterString() + "\ninfo:" + e);
+                    if (DEBUGMODE)
+                        Log.e(">>>", "failure:" + finalPostUrl + "\nparameter:" + parameter.toParameterString() + "\ninfo:" + e);
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            listener.onResponse(null, new NetworkErrorException());
+                            if (responseInterceptListener != null) {
+                                if (responseInterceptListener.onResponse(finalPostUrl, null, new NetworkErrorException())) {
+                                    listener.onResponse(null, new NetworkErrorException());
+                                }
+                            } else {
+                                listener.onResponse(null, new NetworkErrorException());
+                            }
                         }
                     });
                 }
@@ -196,16 +192,18 @@ public class HttpRequest {
                 public void onResponse(Call call, okhttp3.Response response) throws IOException {
                     final String strResponse = response.body().string();
                     if (DEBUGMODE)
-                        Log.i(">>>", "request:" + postUrl + "\nparameter:" + parameter.toParameterString() + "\nresponse:" + strResponse);
+                        Log.i(">>>", "request:" + finalPostUrl + "\nparameter:" + parameter.toParameterString() + "\nresponse:" + strResponse);
                     
                     //回到主线程处理
                     context.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            try {
+                            if (responseInterceptListener != null) {
+                                if (responseInterceptListener.onResponse(finalPostUrl, strResponse, null)) {
+                                    listener.onResponse(strResponse, null);
+                                }
+                            } else {
                                 listener.onResponse(strResponse, null);
-                            } catch (Exception e) {
-                                listener.onResponse(null, e);
                             }
                         }
                     });
@@ -225,6 +223,22 @@ public class HttpRequest {
                     .connectTimeout(20, TimeUnit.SECONDS)
                     .writeTimeout(20, TimeUnit.SECONDS)
                     .readTimeout(20, TimeUnit.SECONDS)
+                    .hostnameVerifier(new HostnameVerifier() {
+                        @Override
+                        public boolean verify(String hostname, SSLSession session) {
+                            if (DEBUGMODE)
+                                Log.i("<<<", "hostnameVerifier: " + hostname);
+                            if (httpsVerifyServiceUrl) {
+                                if (serviceUrl.contains(hostname)) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            } else {
+                                return true;
+                            }
+                        }
+                    })
                     .cache(new Cache(sdcache.getAbsoluteFile(), cacheSize));
             if (certificates != null) {
                 builder.sslSocketFactory(getSSLSocketFactory(certificates));
@@ -259,5 +273,29 @@ public class HttpRequest {
             e.printStackTrace();
         }
         return null;
+    }
+    
+    public static String getSSLInAssetsFileName() {
+        return SSLInAssetsFileName;
+    }
+    
+    public static void setSSLInAssetsFileName(String fileName) {
+        SSLInAssetsFileName = fileName;
+    }
+    
+    public static boolean isHttpsVerifyServiceUrl() {
+        return httpsVerifyServiceUrl;
+    }
+    
+    public static void setHttpsVerifyServiceUrl(boolean httpsVerifyServiceUrl) {
+        HttpRequest.httpsVerifyServiceUrl = httpsVerifyServiceUrl;
+    }
+    
+    public static ResponseInterceptListener getResponseInterceptListener() {
+        return responseInterceptListener;
+    }
+    
+    public static void setResponseInterceptListener(ResponseInterceptListener responseInterceptListener) {
+        HttpRequest.responseInterceptListener = responseInterceptListener;
     }
 }
