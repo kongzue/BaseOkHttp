@@ -202,6 +202,9 @@ limitations under the License.
 ## 更新日志：
 v2.1.0：
 - 完整移植集成 okHttp 源代码及 okio，以解决可能和其他框架产生的 okHttp 版本冲突问题；
+
+唯一需要注意的是所有引用本库中 okio 包的现在请引用 baseokio 包，引用 okhttp3 包的请改为引用 baseokhttp3；
+
 - HttpRequest.POST 支持 Context 类型，在传入 Context 类型时 Response 不会返回主线程操作；
 
 v2.0.9：
