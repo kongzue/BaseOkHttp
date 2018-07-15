@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onResponse(String response, Exception error) {
                                 if (error == null) {
                                     resultHttp.setText(response);
+                                    Log.i(">>>", "onResponse: "+response);
                                 } else {
                                     resultHttp.setText("");
                                     Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT);

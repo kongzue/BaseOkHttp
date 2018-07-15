@@ -2,10 +2,10 @@
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 <a href="https://github.com/kongzue/BaseOkHttp/">
-<img src="https://img.shields.io/badge/BaseOkHttp-2.0.8-green.svg" alt="BaseOkHttp">
+<img src="https://img.shields.io/badge/BaseOkHttp-2.1.0-green.svg" alt="BaseOkHttp">
 </a>
-<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.0.8/link">
-<img src="https://img.shields.io/badge/Maven-2.0.8-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.1.0/link">
+<img src="https://img.shields.io/badge/Maven-2.1.0-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -20,24 +20,25 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.baseokhttp</groupId>
   <artifactId>baseokhttp</artifactId>
-  <version>2.0.8</version>
+  <version>2.1.0</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.baseokhttp:baseokhttp:2.0.8'
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.0'
 ```
 
 试用版可以前往 http://fir.im/BaseOkHttp 下载
 
 ### 前言
 1) 相比OkHttp更大的灵活性，可选流水线式代码编写方式或模块化代码编写方式
-2) 结束请求后自动回归主线程操作，不需要再做额外处理
+2) 结束请求后自动回归主线程操作，不需要再做额外处理（注：从 2.1.0 版本起是否自动返回主线程由第一个参数决定，具体请参照更新日志）
 3) 与我们的BaseVolley一致的请求方式标准，更换底层框架再也无需额外的代码
 4) 提供统一返回监听器ResponseListener处理返回数据
 5) 我们可能在加载网络数据前会调用一个例如 progressbarDialog 的加载进度对话框来表示正在加载数据，此时若将“请求成功”和“请求失败”单独放在两个回调函数中，会导致代码臃肿复杂，至少你必须在两个回调函数中都将 progressbarDialog.dismiss(); 掉，而我们使用统一返回监听器就可以避免代码臃肿的问题，更加简洁高效。
+6) Https私有证书设置方式简单化，使用 setSSLInAssetsFileName 即可完成所有工作。
 
 ### 请注意
 请求成功和错误的返回监听器为同一个新的监听器：ResponseListener，请在ResponseListener中直接判断Exception是否为空（null），若为空即请求成功。
@@ -118,10 +119,12 @@ Parameter是有序参数，方便某些情况下对参数进行加密和校验�
 1) 请将SSL证书文件放在assets目录中，例如“ssl.crt”；
 2) 以附带SSL证书名的方式创建请求：
 ```
-HttpRequest.getInstance(me,"ssl.crt")
+HttpRequest.setSSLInAssetsFileName("ssl.crt")
 ...
 ```
 即可使用Https请求方式。
+
+另外，可使用 HttpRequest.httpsVerifyServiceUrl=(boolean) 设置是否校验请求主机地址与设置的 HttpRequest.serviceUrl 一致；
 
 ### 其他
 1) 多图片表单上传
@@ -197,6 +200,14 @@ limitations under the License.
 ```
 
 ## 更新日志：
+v2.1.0：
+- 完整移植集成 okHttp 源代码及 okio，以解决可能和其他框架产生的 okHttp 版本冲突问题；
+- HttpRequest.POST 支持 Context 类型，在传入 Context 类型时 Response 不会返回主线程操作；
+
+v2.0.9：
+- 可使用 HttpRequest.setSSLInAssetsFileName(String assetsFileName) 设置 Https 请求 SSL 证书文件，可使用 HttpRequest.httpsVerifyServiceUrl=(boolean) 设置是否校验请求主机地址与设置的 HttpRequest.serviceUrl 一致；
+- 修复bug；
+
 v2.0.8：
 - 新增全局拦截器 ResponseInterceptListener，可进行全局请求拦截操作
 - 现在可以通过 setSSLInAssetsFileName(String fileName) 直接设置 Https 证书目录；

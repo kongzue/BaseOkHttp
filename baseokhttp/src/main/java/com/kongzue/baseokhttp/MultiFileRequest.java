@@ -7,21 +7,19 @@ import com.kongzue.baseokhttp.exceptions.NetworkErrorException;
 import com.kongzue.baseokhttp.listener.ResponseListener;
 import com.kongzue.baseokhttp.util.Parameter;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import baseokhttp3.Call;
+import baseokhttp3.Callback;
+import baseokhttp3.MediaType;
+import baseokhttp3.MultipartBody;
+import baseokhttp3.OkHttpClient;
+import baseokhttp3.Request;
+import baseokhttp3.RequestBody;
+import baseokhttp3.Response;
 
 import static com.kongzue.baseokhttp.HttpRequest.DEBUGMODE;
 import static com.kongzue.baseokhttp.HttpRequest.serviceUrl;

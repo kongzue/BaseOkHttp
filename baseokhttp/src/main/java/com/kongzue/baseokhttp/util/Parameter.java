@@ -6,8 +6,8 @@ package com.kongzue.baseokhttp.util;
 
 import java.util.TreeMap;
 
-import okhttp3.FormBody;
-import okhttp3.RequestBody;
+import baseokhttp3.FormBody;
+import baseokhttp3.RequestBody;
 
 public class Parameter extends TreeMap<String,String> {
 
