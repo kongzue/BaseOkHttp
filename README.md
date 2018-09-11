@@ -165,6 +165,7 @@ MultiFileRequest.POST(Activity a, String partUrl, Parameter headers, Parameter p
 ```
 
 2) ~~多图片表单上传（已过时）~~
+
 BaseOkHttp 除了提供基础的 Get 以及 Post 请求外，还提供了图片下载工具和多文件上传工具，具体可以参考 MultiFileRequest 类，使用方法亦很简单：
 ```
 //要上传文件，先创建一个文件的List，稍后作为.doPost(...)方法的参数发送
