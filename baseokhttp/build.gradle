@@ -6,7 +6,7 @@ def siteUrl = 'https://github.com/kongzue/BaseOkHttp' //项目在github主页地
 def gitUrl = 'https://github.com/kongzue/BaseOkHttp.git'   //Git仓库的地址
 
 group = "com.kongzue.baseokhttp"//发布aar前缀根节点
-version = "2.1.0"//发布aar的库版本
+version = "2.1.1"//发布aar的库版本
 
 android {
     compileSdkVersion 27
@@ -15,7 +15,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 27
         versionCode 13
-        versionName "2.1.0"
+        versionName "2.1.1"
     }
 
     buildTypes {

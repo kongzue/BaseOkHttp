@@ -129,7 +129,7 @@ public class MultiFileRequest {
         httpBuilder.url(postUrl);
         httpBuilder.post(requestBody);
         //请求头处理
-        if (parameter != null) {
+        if (headers != null) {
             if (!headers.entrySet().isEmpty()) {
                 for (Map.Entry<String, String> entry : headers.entrySet()) {
                     httpBuilder.addHeader(entry.getKey(), entry.getValue());

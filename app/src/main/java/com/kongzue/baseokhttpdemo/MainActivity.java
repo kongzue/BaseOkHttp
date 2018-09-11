@@ -9,11 +9,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kongzue.baseokhttp.HttpRequest;
+import com.kongzue.baseokhttp.MultiFileRequest;
 import com.kongzue.baseokhttp.listener.ResponseInterceptListener;
 import com.kongzue.baseokhttp.listener.ResponseListener;
 import com.kongzue.baseokhttp.util.Parameter;
 
 import org.json.JSONObject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     
@@ -40,10 +45,10 @@ public class MainActivity extends AppCompatActivity {
                 HttpRequest.setResponseInterceptListener(new ResponseInterceptListener() {
                     @Override
                     public boolean onResponse(String url, String response, Exception error) {
-                        if (error!=null){
+                        if (error != null) {
                             return true;
-                        }else{
-                            Log.i("!!!", "onResponse: "+response);
+                        } else {
+                            Log.i("!!!", "onResponse: " + response);
                             return true;
                         }
                     }
@@ -55,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onResponse(String response, Exception error) {
                                 if (error == null) {
                                     resultHttp.setText(response);
-                                    Log.i(">>>", "onResponse: "+response);
+                                    Log.i(">>>", "onResponse: " + response);
                                 } else {
                                     resultHttp.setText("");
                                     Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT);

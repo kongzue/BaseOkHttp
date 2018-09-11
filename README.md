@@ -130,15 +130,29 @@ HttpRequest.setSSLInAssetsFileName("ssl.crt")
 1) 多图片表单上传
 BaseVolley除了提供基础的 Get 以及 Post 请求外，还提供了图片下载工具和多文件上传工具，具体可以参考 MultiFileRequest 类，使用方法亦很简单：
 ```
+//要上传文件，先创建一个文件的List，稍后作为.doPost(...)方法的参数发送
 List<File> files = new ArrayList<>();
 files.add(new File(xxx1));
 files.add(new File(xxx2));
-
+MultiFileRequest multiFileRequest = MultiFileRequest.getInstance(me);
+//需要额外携带参数的话，请使用setParameter(...)设置，以下是范例
+multiFileRequest.setParameter(new Parameter()
+                                      .add("key1", "value1")
+                                      .add("key2", "value2")
+                                      .add("key3", "value3")
+                                      .add("key4", "value4")
+);
+//需要添加请求头的话，setHeaders(...)设置，以下是范例
+multiFileRequest.setHeaders(new Parameter()
+                                    .add("header1", "value1")
+                                    .add("header2", "value2")
+                                    .add("header3", "value3")
+                                    .add("header4", "value4")
+);
 //上传范例（me = Activity.this）
 multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new ResponseListener() {
     @Override
     public void onResponse(String response, Exception error) {
-        progressbarDialog.dismiss();
         if (error == null) {
             //请求成功处理
         } else {
