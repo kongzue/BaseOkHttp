@@ -2,10 +2,10 @@
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 <a href="https://github.com/kongzue/BaseOkHttp/">
-<img src="https://img.shields.io/badge/BaseOkHttp-2.1.0-green.svg" alt="BaseOkHttp">
+<img src="https://img.shields.io/badge/BaseOkHttp-2.1.2-green.svg" alt="BaseOkHttp">
 </a>
-<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.1.0/link">
-<img src="https://img.shields.io/badge/Maven-2.1.0-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.1.2/link">
+<img src="https://img.shields.io/badge/Maven-2.1.2-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -20,14 +20,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.baseokhttp</groupId>
   <artifactId>baseokhttp</artifactId>
-  <version>2.1.0</version>
+  <version>2.1.2</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.0'
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.2'
 ```
 
 试用版可以前往 http://fir.im/BaseOkHttp 下载
@@ -57,7 +57,9 @@ HttpRequest.serviceUrl = "http://www.xxx.com";
 ```
 对于请求地址以 “http” 开头的，不进行添加 serviceUrl 的处理。
 
-### 快速使用
+### 一般请求
+1) 快速使用：
+
 ```
 HttpRequest.POST(me, "https://www.apiopen.top/femaleNameApi", new Parameter()
                 .add("page", "1")
@@ -74,7 +76,7 @@ HttpRequest.POST(me, "https://www.apiopen.top/femaleNameApi", new Parameter()
         });
 ```
 
-### 食用方法
+2) 具体食用方法
 ```
 //创建正在加载UI表示
 ProgressbarDialog progressbarDialog = new ProgressbarDialog(this);
@@ -115,7 +117,7 @@ GET请求可以使用HttpRequest.getInstance(context).getRequest(...);方法进�
 
 Parameter是有序参数，方便某些情况下对参数进行加密和校验。
 
-### HTTPS
+### 支持 HTTPS
 1) 请将SSL证书文件放在assets目录中，例如“ssl.crt”；
 2) 以附带SSL证书名的方式创建请求：
 ```
@@ -126,8 +128,43 @@ HttpRequest.setSSLInAssetsFileName("ssl.crt")
 
 另外，可使用 HttpRequest.httpsVerifyServiceUrl=(boolean) 设置是否校验请求主机地址与设置的 HttpRequest.serviceUrl 一致；
 
-### 其他
-1) 多图片表单上传
+### 多文件表单上传
+
+1) 快速使用
+```
+//要上传文件，先创建一个文件的List，稍后作为.doPost(...)方法的参数发送
+List<File> files = new ArrayList<>();
+files.add(new File(xxx1));
+files.add(new File(xxx2));
+//开始发送请求
+MultiFileRequest.POST(me, "url", files, new ResponseListener() {
+    @Override
+    public void onResponse(String response, Exception error) {
+        if (error == null) {
+            resultHttp.setText(response);
+            Log.i(">>>", "onResponse: " + response);
+        } else {
+            resultHttp.setText("");
+            Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT);
+        }
+    }
+});
+```
+
+额外的，可根据需求选用同名的方法：
+```
+//需要额外的参数
+MultiFileRequest.POST(Activity a, String partUrl, Parameter parameter, List<File> files, ResponseListener listener)
+
+//需要额外的Headers头
+MultiFileRequest.POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, ResponseListener listener);
+
+//默认情况下，MultiFileRequest发送的文件类型为 image/png ，需要额外的修改为上传文件类型：
+MediaType MEDIA_TYPE = MediaType.parse("image/png");
+MultiFileRequest.POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, ResponseListener listener, MediaType MEDIA_TYPE);
+```
+
+2) ~~多图片表单上传（已过时）~~
 BaseOkHttp 除了提供基础的 Get 以及 Post 请求外，还提供了图片下载工具和多文件上传工具，具体可以参考 MultiFileRequest 类，使用方法亦很简单：
 ```
 //要上传文件，先创建一个文件的List，稍后作为.doPost(...)方法的参数发送
@@ -163,7 +200,7 @@ multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new Re
 });
 ```
 
-2) 全局返回拦截器
+### 全局返回拦截器
 使用如下代码可以设置全局返回数据监听拦截器，return true 可返回请求继续处理，return false 即拦截掉不会继续返回原请求进行处理；
 ```
 HttpRequest.setResponseInterceptListener(new ResponseInterceptListener() {
@@ -214,6 +251,13 @@ limitations under the License.
 ```
 
 ## 更新日志：
+v2.1.2：
+- MultiFileRequest 多文件上传方式更新（具体请参照文档）；
+- Context 的存储方式修改；
+
+v2.1.1：
+- 修复bug；
+
 v2.1.0：
 - 完整移植集成 okHttp 源代码及 okio，以解决可能和其他框架产生的 okHttp 版本冲突问题；
 

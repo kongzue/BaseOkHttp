@@ -1,6 +1,7 @@
 package com.kongzue.baseokhttp;
 
 import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 
 import com.kongzue.baseokhttp.exceptions.NetworkErrorException;
@@ -32,13 +33,15 @@ import static com.kongzue.baseokhttp.HttpRequest.serviceUrl;
 
 public class MultiFileRequest {
     
-    private Parameter headers;
-    private static Activity context;
+    private Activity activity;
     
-    private static final MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");
+    private MediaType MEDIA_TYPE = MediaType.parse("image/png");
+    
     private final OkHttpClient client = new OkHttpClient();
     private ResponseListener responseListener;
+    
     private Parameter parameter;
+    private Parameter headers;
     
     //单例
     private static MultiFileRequest multiFileRequest;
@@ -46,13 +49,41 @@ public class MultiFileRequest {
     private MultiFileRequest() {
     }
     
-    //默认请求创建方法
-    public static MultiFileRequest getInstance(Activity c) {
+    //默认请求创建方法(不再推荐使用)
+    @Deprecated
+    public static MultiFileRequest getInstance(Activity a) {
         synchronized (MultiFileRequest.class) {
             if (multiFileRequest == null) {
                 multiFileRequest = new MultiFileRequest();
             }
-            context = c;
+            multiFileRequest.activity = a;
+        }
+        return multiFileRequest;
+    }
+    
+    //快速请求创建方法
+    public static MultiFileRequest POST(Activity a, String partUrl, List<File> files, ResponseListener listener) {
+        return POST(a, partUrl, null, null, files, listener, MediaType.parse("image/png"));
+    }
+    
+    public static MultiFileRequest POST(Activity a, String partUrl, Parameter parameter, List<File> files, ResponseListener listener) {
+        return POST(a, partUrl, null, parameter, files, listener, MediaType.parse("image/png"));
+    }
+    
+    public static MultiFileRequest POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, ResponseListener listener) {
+        return POST(a, partUrl, null, parameter, files, listener, MediaType.parse("image/png"));
+    }
+    
+    public static MultiFileRequest POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, ResponseListener listener, MediaType MEDIA_TYPE) {
+        synchronized (MultiFileRequest.class) {
+            if (multiFileRequest == null) {
+                multiFileRequest = new MultiFileRequest();
+            }
+            multiFileRequest.activity = a;
+            multiFileRequest.parameter = parameter;
+            multiFileRequest.headers = headers;
+            multiFileRequest.MEDIA_TYPE = MEDIA_TYPE;
+            multiFileRequest.doPost(partUrl, files, listener);
         }
         return multiFileRequest;
     }
@@ -107,7 +138,7 @@ public class MultiFileRequest {
                 } else {
                     name = fileNames.get(i);
                 }
-                builder.addFormDataPart(name, f.getName(), RequestBody.create(MEDIA_TYPE_PNG, f));
+                builder.addFormDataPart(name, f.getName(), RequestBody.create(MEDIA_TYPE, f));
                 if (DEBUGMODE) Log.i(">>>", "添加了一张图片：" + "img" + (i + 1) + ":" + f.getName());
             }
         }
@@ -144,7 +175,7 @@ public class MultiFileRequest {
                 if (DEBUGMODE)
                     Log.i(">>>", "上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
                 //回到主线程处理
-                context.runOnUiThread(new Runnable() {
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         listener.onResponse(null, new NetworkErrorException());
@@ -158,7 +189,7 @@ public class MultiFileRequest {
                 if (DEBUGMODE) Log.i(">>>", "上传成功：response = " + result);
                 try {
                     //回到主线程处理
-                    context.runOnUiThread(new Runnable() {
+                    activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             try {

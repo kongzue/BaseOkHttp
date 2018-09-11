@@ -59,8 +59,8 @@ public class HttpRequest {
     private Parameter headers;
     
     private static OkHttpClient okHttpClient;
-    private static Activity activity;
-    private static Context context;
+    private Activity activity;
+    private Context context;
     
     //单例
     private static HttpRequest httpRequest;
@@ -75,8 +75,8 @@ public class HttpRequest {
             if (httpRequest == null) {
                 httpRequest = new HttpRequest();
             }
-            activity = a;
-            context = null;
+            httpRequest.activity = a;
+            httpRequest.context = null;
         }
         return httpRequest;
     }
@@ -87,8 +87,8 @@ public class HttpRequest {
             if (httpRequest == null) {
                 httpRequest = new HttpRequest();
             }
-            activity = a;
-            context = null;
+            httpRequest.activity = a;
+            httpRequest.context = null;
             httpRequest.postRequest(partUrl, parameter, listener);
         }
         return httpRequest;
@@ -99,21 +99,20 @@ public class HttpRequest {
             if (httpRequest == null) {
                 httpRequest = new HttpRequest();
             }
-            activity = null;
-            context = c;
+            httpRequest.activity = null;
+            httpRequest.context = c;
             httpRequest.postRequest(partUrl, parameter, listener);
         }
         return httpRequest;
     }
     
-    //快速请求创建方法
     public static HttpRequest GET(Activity a, String partUrl, Parameter parameter, ResponseListener listener) {
         synchronized (HttpRequest.class) {
             if (httpRequest == null) {
                 httpRequest = new HttpRequest();
             }
-            activity = a;
-            context = null;
+            httpRequest.activity = a;
+            httpRequest.context = null;
             httpRequest.getRequest(partUrl, parameter, listener);
         }
         return httpRequest;
