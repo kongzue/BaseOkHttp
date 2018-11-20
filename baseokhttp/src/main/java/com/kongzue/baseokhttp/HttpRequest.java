@@ -5,8 +5,10 @@ import android.content.Context;
 import android.util.Log;
 
 import com.kongzue.baseokhttp.exceptions.NetworkErrorException;
+import com.kongzue.baseokhttp.exceptions.TimeOutException;
 import com.kongzue.baseokhttp.listener.ResponseInterceptListener;
 import com.kongzue.baseokhttp.listener.ResponseListener;
+import com.kongzue.baseokhttp.util.JsonFormat;
 import com.kongzue.baseokhttp.util.Parameter;
 
 import java.io.File;
@@ -16,6 +18,8 @@ import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
@@ -41,6 +45,9 @@ public class HttpRequest {
     //是否开启调试模式
     public static boolean DEBUGMODE = false;
     
+    //超时时长（单位：秒）
+    public static int TIME_OUT_DURATION = 10;
+    
     //默认服务器地址
     public static String serviceUrl = "";
     
@@ -58,64 +65,54 @@ public class HttpRequest {
     
     private Parameter headers;
     
-    private static OkHttpClient okHttpClient;
-    private Activity activity;
     private Context context;
+    private ResponseListener listener;
+    private OkHttpClient okHttpClient;
     
     //单例
-    private static HttpRequest httpRequest;
+    private HttpRequest httpRequest;
     
     private HttpRequest() {
     }
     
     //默认请求创建方法（不再推荐使用）
     @Deprecated
-    public static HttpRequest getInstance(Activity a) {
+    public static HttpRequest getInstance(Context context) {
         synchronized (HttpRequest.class) {
-            if (httpRequest == null) {
-                httpRequest = new HttpRequest();
-            }
-            httpRequest.activity = a;
-            httpRequest.context = null;
+            HttpRequest httpRequest = new HttpRequest();
+            httpRequest.context = context;
+            return httpRequest;
         }
-        return httpRequest;
     }
     
-    //快速请求创建方法
-    public static HttpRequest POST(Activity a, String partUrl, Parameter parameter, ResponseListener listener) {
-        synchronized (HttpRequest.class) {
-            if (httpRequest == null) {
-                httpRequest = new HttpRequest();
-            }
-            httpRequest.activity = a;
-            httpRequest.context = null;
-            httpRequest.postRequest(partUrl, parameter, listener);
-        }
-        return httpRequest;
+    //快速请求创建方法(POST请求)
+    public static void POST(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
+        POST(context, partUrl, null, parameter, listener);
     }
     
-    public static HttpRequest POST(Context c, String partUrl, Parameter parameter, ResponseListener listener) {
+    public static void POST(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
         synchronized (HttpRequest.class) {
-            if (httpRequest == null) {
-                httpRequest = new HttpRequest();
-            }
-            httpRequest.activity = null;
-            httpRequest.context = c;
-            httpRequest.postRequest(partUrl, parameter, listener);
+            HttpRequest httpRequest = new HttpRequest();
+            httpRequest.context = context;
+            httpRequest.headers = headers;
+            httpRequest.listener = listener;
+            httpRequest.doRequest(partUrl, parameter, POST_REQUEST);
         }
-        return httpRequest;
     }
     
-    public static HttpRequest GET(Activity a, String partUrl, Parameter parameter, ResponseListener listener) {
+    //快速请求创建方法(GET请求)
+    public static void GET(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
+        GET(context, partUrl, null, parameter, listener);
+    }
+    
+    public static void GET(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
         synchronized (HttpRequest.class) {
-            if (httpRequest == null) {
-                httpRequest = new HttpRequest();
-            }
-            httpRequest.activity = a;
-            httpRequest.context = null;
-            httpRequest.getRequest(partUrl, parameter, listener);
+            HttpRequest httpRequest = new HttpRequest();
+            httpRequest.context = context;
+            httpRequest.headers = headers;
+            httpRequest.listener = listener;
+            httpRequest.doRequest(partUrl, parameter, GET_REQUEST);
         }
-        return httpRequest;
     }
     
     public Parameter getHeaders() {
@@ -127,39 +124,29 @@ public class HttpRequest {
         return this;
     }
     
-    public void postRequest(String partUrl, final Parameter parameter,
-                            final ResponseListener listener) {
-        doRequest(partUrl, parameter, listener, POST_REQUEST);
-    }
-    
-    public void getRequest(String partUrl, final Parameter parameter,
-                           final ResponseListener listener) {
-        doRequest(partUrl, parameter, listener, GET_REQUEST);
-    }
-    
     private String postUrl;
+    private boolean isSending;
     
-    private void doRequest(final String url, final Parameter parameter, final ResponseListener listener, int requestType) {
+    private void doRequest(final String url, final Parameter parameter, int requestType) {
         try {
-            OkHttpClient okHttpClient;
             
             if (SSLInAssetsFileName == null || SSLInAssetsFileName.isEmpty()) {
                 okHttpClient = new OkHttpClient();
             } else {
-                if (activity == null) {
-                    okHttpClient = getOkHttpClient(context, context.getAssets().open(SSLInAssetsFileName));
-                } else {
-                    okHttpClient = getOkHttpClient(activity, activity.getAssets().open(SSLInAssetsFileName));
-                }
+                okHttpClient = getOkHttpClient(context, context.getAssets().open(SSLInAssetsFileName));
             }
             
             postUrl = url;
             
-            if (DEBUGMODE)
-                Log.i("<<<", "创建请求:" + postUrl + "\nparameter:" + parameter.toParameterString());
-            
             if (!postUrl.startsWith("http")) {
                 postUrl = serviceUrl + postUrl;
+            }
+            
+            if (DEBUGMODE) {
+                Log.i(">>>", "-------------------------------------");
+                Log.i(">>>", "创建请求:" + postUrl);
+                Log.i(">>>", "参数:" + parameter.toParameterString());
+                Log.i(">>>", "请求已发送 ->");
             }
             
             RequestBody requestBody = parameter.toOkHttpParameter();
@@ -167,6 +154,7 @@ public class HttpRequest {
             //创建请求
             baseokhttp3.Request request;
             baseokhttp3.Request.Builder builder = new baseokhttp3.Request.Builder();
+            
             //请求类型处理
             if (requestType == GET_REQUEST) {
                 builder.url(postUrl + "?" + parameter.toParameterString());
@@ -175,76 +163,98 @@ public class HttpRequest {
                 builder.post(requestBody);
             }
             //请求头处理
-            if (parameter != null) {
-                if (headers != null && !headers.entrySet().isEmpty()) {
-                    for (Map.Entry<String, String> entry : headers.entrySet()) {
-                        builder.addHeader(entry.getKey(), entry.getValue());
-                    }
+            if (headers != null && !headers.entrySet().isEmpty()) {
+                for (Map.Entry<String, String> entry : headers.entrySet()) {
+                    builder.addHeader(entry.getKey(), entry.getValue());
                 }
             }
             request = builder.build();
             
             final String finalPostUrl = postUrl;
             
+            //检查超时状态
+            checkTimeOut();
+            isSending = true;
+            
             okHttpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, final IOException e) {
-                    if (DEBUGMODE)
-                        Log.e(">>>", "failure:" + finalPostUrl + "\nparameter:" + parameter.toParameterString() + "\ninfo:" + e);
+                    if (!isSending) return;
+                    isSending = false;
+                    if (DEBUGMODE) {
+                        Log.e(">>>", "请求失败:" + finalPostUrl);
+                        Log.e(">>>", "参数:" + parameter.toParameterString());
+                        Log.e(">>>", "错误:" + e.toString());
+                        Log.e(">>>", "=====================================");
+                    }
                     //回到主线程处理
-                    if (activity == null) {
-                        if (responseInterceptListener != null) {
-                            if (responseInterceptListener.onResponse(finalPostUrl, null, new NetworkErrorException())) {
-                                listener.onResponse(null, new NetworkErrorException());
-                            }
-                        } else {
-                            listener.onResponse(null, new NetworkErrorException());
-                        }
-                    } else {
-                        activity.runOnUiThread(new Runnable() {
+                    if (context instanceof Activity) {
+                        ((Activity) context).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 if (responseInterceptListener != null) {
                                     if (responseInterceptListener.onResponse(finalPostUrl, null, new NetworkErrorException())) {
-                                        listener.onResponse(null, new NetworkErrorException());
+                                        if (listener != null)
+                                            listener.onResponse(null, new NetworkErrorException());
                                     }
                                 } else {
-                                    listener.onResponse(null, new NetworkErrorException());
+                                    if (listener != null)
+                                        listener.onResponse(null, new NetworkErrorException());
                                 }
                             }
                         });
+                    } else {
+                        if (responseInterceptListener != null) {
+                            if (responseInterceptListener.onResponse(finalPostUrl, null, new NetworkErrorException())) {
+                                if (listener != null)
+                                    listener.onResponse(null, new NetworkErrorException());
+                            }
+                        } else {
+                            if (listener != null)
+                                listener.onResponse(null, new NetworkErrorException());
+                        }
                     }
                     
                 }
                 
                 @Override
                 public void onResponse(Call call, baseokhttp3.Response response) throws IOException {
+                    if (!isSending) return;
+                    isSending = false;
                     final String strResponse = response.body().string();
-                    if (DEBUGMODE)
-                        Log.i(">>>", "request:" + finalPostUrl + "\nparameter:" + parameter.toParameterString() + "\nresponse:" + strResponse);
+                    if (DEBUGMODE) {
+                        Log.i(">>>", "请求成功:" + finalPostUrl);
+                        Log.i(">>>", "参数:" + parameter.toParameterString());
+                        Log.i(">>>", "返回内容:");
+                        if (!JsonFormat.formatJson(strResponse)) {
+                            Log.i(">>>", strResponse);
+                        }
+                        Log.i(">>>", "=====================================");
+                    }
                     
                     //回到主线程处理
-                    if (activity == null) {
-                        if (responseInterceptListener != null) {
-                            if (responseInterceptListener.onResponse(finalPostUrl, strResponse, null)) {
-                                listener.onResponse(strResponse, null);
-                            }
-                        } else {
-                            listener.onResponse(strResponse, null);
-                        }
-                    }else{
-                        activity.runOnUiThread(new Runnable() {
+                    if (context instanceof Activity) {
+                        ((Activity) context).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 if (responseInterceptListener != null) {
                                     if (responseInterceptListener.onResponse(finalPostUrl, strResponse, null)) {
-                                        listener.onResponse(strResponse, null);
+                                        if (listener != null)
+                                            listener.onResponse(strResponse, null);
                                     }
                                 } else {
-                                    listener.onResponse(strResponse, null);
+                                    if (listener != null) listener.onResponse(strResponse, null);
                                 }
                             }
                         });
+                    } else {
+                        if (responseInterceptListener != null) {
+                            if (responseInterceptListener.onResponse(finalPostUrl, strResponse, null)) {
+                                if (listener != null) listener.onResponse(strResponse, null);
+                            }
+                        } else {
+                            if (listener != null) listener.onResponse(strResponse, null);
+                        }
                     }
                 }
             });
@@ -254,7 +264,34 @@ public class HttpRequest {
         
     }
     
-    public static OkHttpClient getOkHttpClient(Context context, InputStream... certificates) {
+    private Timer timer;
+    
+    private void checkTimeOut() {
+        if (timer != null) timer.cancel();
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (isSending && listener != null) {
+                    isSending = false;
+                    Log.e(">>>", "请求超时 ×");
+                    Log.e(">>>", "=====================================");
+                    if (context instanceof Activity) {
+                        ((Activity) context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                listener.onResponse(null, new TimeOutException());
+                            }
+                        });
+                    } else {
+                        listener.onResponse(null, new TimeOutException());
+                    }
+                }
+            }
+        }, TIME_OUT_DURATION * 1000);
+    }
+    
+    public OkHttpClient getOkHttpClient(Context context, InputStream... certificates) {
         if (okHttpClient == null) {
             File sdcache = context.getExternalCacheDir();
             int cacheSize = 10 * 1024 * 1024;

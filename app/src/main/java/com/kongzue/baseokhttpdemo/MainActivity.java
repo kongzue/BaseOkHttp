@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
         btnHttp = findViewById(R.id.btn_http);
         resultHttp = findViewById(R.id.result_http);
         
+        HttpRequest.DEBUGMODE = true;
+        
         me = this;
         
         btnHttp.setOnClickListener(new View.OnClickListener() {
@@ -60,14 +62,15 @@ public class MainActivity extends AppCompatActivity {
                             public void onResponse(String response, Exception error) {
                                 if (error == null) {
                                     resultHttp.setText(response);
-                                    Log.i(">>>", "onResponse: " + response);
+                                    //Log.i(">>>", "onResponse: " + response);
                                 } else {
-                                    resultHttp.setText("");
-                                    Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT);
+                                    resultHttp.setText("请求失败");
+                                    Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });
             }
         });
+        
     }
 }

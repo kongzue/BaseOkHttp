@@ -2,10 +2,10 @@
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 <a href="https://github.com/kongzue/BaseOkHttp/">
-<img src="https://img.shields.io/badge/BaseOkHttp-2.1.3-green.svg" alt="BaseOkHttp">
+<img src="https://img.shields.io/badge/BaseOkHttp-2.1.4-green.svg" alt="BaseOkHttp">
 </a>
-<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.1.3/link">
-<img src="https://img.shields.io/badge/Maven-2.1.3-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.1.4/link">
+<img src="https://img.shields.io/badge/Maven-2.1.4-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -14,25 +14,25 @@ OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行�
 <img src="https://img.shields.io/badge/Homepage-Kongzue.com-brightgreen.svg" alt="Homepage">
 </a>
 
-### Maven仓库或Gradle的引用方式
+## Maven仓库或Gradle的引用方式
 Maven仓库：
 ```
 <dependency>
   <groupId>com.kongzue.baseokhttp</groupId>
   <artifactId>baseokhttp</artifactId>
-  <version>2.1.3</version>
+  <version>2.1.4</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.3'
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.4'
 ```
 
 试用版可以前往 http://fir.im/BaseOkHttp 下载
 
-### 前言
+## 前言
 1) 相比OkHttp更大的灵活性，可选流水线式代码编写方式或模块化代码编写方式
 2) 结束请求后自动回归主线程操作，不需要再做额外处理（注：从 2.1.0 版本起是否自动返回主线程由第一个参数决定，具体请参照更新日志）
 3) 与我们的BaseVolley一致的请求方式标准，更换底层框架再也无需额外的代码
@@ -40,12 +40,12 @@ implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.3'
 5) 我们可能在加载网络数据前会调用一个例如 progressbarDialog 的加载进度对话框来表示正在加载数据，此时若将“请求成功”和“请求失败”单独放在两个回调函数中，会导致代码臃肿复杂，至少你必须在两个回调函数中都将 progressbarDialog.dismiss(); 掉，而我们使用统一返回监听器就可以避免代码臃肿的问题，更加简洁高效。
 6) Https私有证书设置方式简单化，使用 setSSLInAssetsFileName 即可完成所有工作。
 
-### 请注意
+## 请注意
 请求成功和错误的返回监听器为同一个新的监听器：ResponseListener，请在ResponseListener中直接判断Exception是否为空（null），若为空即请求成功。
 
 提供额外方法setHeaders()添加请求头，提供额外方法setSSLInAssetsFileName()设置Https请求证书。
 
-### 设置
+## 额外设置
 从 2.0.3 版本起可通过以下属性开启全局打印请求日志信息：
 ```
 HttpRequest.DEBUGMODE = true;
@@ -57,7 +57,12 @@ HttpRequest.serviceUrl = "http://www.xxx.com";
 ```
 对于请求地址以 “http” 开头的，不进行添加 serviceUrl 的处理。
 
-### 一般请求
+从 2.1.4 版本起，可设置超时时间（默认10，单位：秒）：
+```
+HttpRequest.TIME_OUT_DURATION = 10;
+```
+
+## 一般请求
 1) 快速使用：
 
 ```
@@ -70,7 +75,7 @@ HttpRequest.POST(me, "https://www.apiopen.top/femaleNameApi", new Parameter()
                     resultHttp.setText(response);
                 } else {
                     resultHttp.setText("");
-                    Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT);
+                    Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -82,42 +87,64 @@ HttpRequest.POST(me, "https://www.apiopen.top/femaleNameApi", new Parameter()
 ProgressbarDialog progressbarDialog = new ProgressbarDialog(this);
 progressbarDialog.show();
 
-//Http请求范例（me = Activity.this）
-HttpRequest.getInstance(me)
-        //自定义请求Header头部信息（选用）
-        .setHeaders(new Parameter()
-                .add("Charset", "UTF-8")
-                .add("Content-Type", "application/json")
-                .add("Accept-Encoding", "gzip,deflate")
-        )
-        //发送请求
-        .postRequest("http://www.xxx.com/test", new Parameter()
-                        .add("key1", "value1")
-                        .add("key2", "value3")
-                        .add("key4", "value4"),
-                new ResponseListener() {
-                    @Override
-                    public void onResponse(String response, Exception error) {
-                        //关闭进度对话框
-                        progressbarDialog.dismiss();
+//Http请求范例
+HttpRequest.POST(this, "https://www.apiopen.top/femaleNameApi",
+                 //自定义请求Header头部信息（选用，此参数可以为 null，或者直接忽略该参数也可）
+                 new Parameter()
+                         .add("Charset", "UTF-8")
+                         .add("Content-Type", "application/json")
+                         .add("Accept-Encoding", "gzip,deflate"),
+                 //请求参数
+                 new Parameter()
+                         .add("key1", "value1")
+                         .add("key2", "value3")
+                         .add("key4", "value4"),
+                 //请求回调
+                 new ResponseListener() {
+                     @Override
+                     public void onResponse(String response, Exception error) {
+                         //关闭进度对话框
+                         progressbarDialog.dismiss();
 
-                        //处理返回数据逻辑
-                        if (error == null) {
-                            //请求成功处理
-                        } else {
-                            //请求失败处理
-                            Toast.makeText(me, "网络错误，请重试", Toast.LENGTH_SHORT);
-                        }
-                    }
-                });
+                         //处理返回数据逻辑
+                         if (error == null) {
+                             //请求成功处理
+                         } else {
+                             //请求失败处理
+                             Toast.makeText(me, "网络错误，请重试", Toast.LENGTH_SHORT);
+                         }
+                     }
+                 }
+);
 ```
-POST请求可以使用HttpRequest.getInstance(context).postRequest(...);方法；
-
-GET请求可以使用HttpRequest.getInstance(context).getRequest(...);方法进行。
 
 Parameter是有序参数，方便某些情况下对参数进行加密和校验。
 
-### 支持 HTTPS
+## 关于多线程
+
+BaseOkHttp 在请求时会处于异步线程，若您传入的上下文索引 context 为 Activity 类型，BaseOkHttp 会在请求结束后**自动**返回主线程。
+
+若您传入的 context 为其他类型，请求结束后会在异步线程返回，如有特殊需要请自行处理。
+
+## 增强型日志
+
+BaseOkHttp 从 2.1.4 版本起支持增强型日志，参考如图：
+
+![BaseOkHttp Logs](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/img_okhttp_logs.png)
+
+1. 要开启请先设置：HttpRequest.DEBUGMODE 为 true；
+
+在您使用 BaseOkHttp 时可以在 Logcat 的筛选中使用字符 “>>>” 对日志进行筛选（Logcat日志界面上方右侧的搜索输入框）。
+
+您可以在 Android Studio 的 File -> Settings 的 Editor -> Color Scheme -> Android Logcat 中调整各类型的 log 颜色，我们推荐如下图方式设置颜色：
+
+![Kongzue's log settings](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/baseframework_logsettings.png)
+
+2. 对json进行自动格式化
+
+使用 log(...) 方法输出日志内容时，若内容是 json 字符串，会自动格式化输出，方便查看。
+
+## HTTPS 支持
 1) 请将SSL证书文件放在assets目录中，例如“ssl.crt”；
 2) 以附带SSL证书名的方式创建请求：
 ```
@@ -128,7 +155,7 @@ HttpRequest.setSSLInAssetsFileName("ssl.crt")
 
 另外，可使用 HttpRequest.httpsVerifyServiceUrl=(boolean) 设置是否校验请求主机地址与设置的 HttpRequest.serviceUrl 一致；
 
-### 多文件表单上传
+## 多文件表单上传
 
 1) 快速使用
 ```
@@ -201,7 +228,7 @@ multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new Re
 });
 ```
 
-### 全局返回拦截器
+## 全局返回拦截器
 使用如下代码可以设置全局返回数据监听拦截器，return true 可返回请求继续处理，return false 即拦截掉不会继续返回原请求进行处理；
 ```
 HttpRequest.setResponseInterceptListener(new ResponseInterceptListener() {
@@ -252,6 +279,11 @@ limitations under the License.
 ```
 
 ## 更新日志：
+v2.1.4：
+- 修复了一些 bug；
+- HttpRequest 新增带 headers 参数的 POST 和 GET 方法；
+- 全新的 DEBUGMODE 日志；
+
 v2.1.3：
 - 修复了一些bug；
 
