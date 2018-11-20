@@ -40,10 +40,9 @@ implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.4'
 5) 我们可能在加载网络数据前会调用一个例如 progressbarDialog 的加载进度对话框来表示正在加载数据，此时若将“请求成功”和“请求失败”单独放在两个回调函数中，会导致代码臃肿复杂，至少你必须在两个回调函数中都将 progressbarDialog.dismiss(); 掉，而我们使用统一返回监听器就可以避免代码臃肿的问题，更加简洁高效。
 6) Https私有证书设置方式简单化，使用 setSSLInAssetsFileName 即可完成所有工作。
 
-## 请注意
-请求成功和错误的返回监听器为同一个新的监听器：ResponseListener，请在ResponseListener中直接判断Exception是否为空（null），若为空即请求成功。
-
-提供额外方法setHeaders()添加请求头，提供额外方法setSSLInAssetsFileName()设置Https请求证书。
+## 使用前注意
+1) BaseOkHttp 在请求结束后，无论成功还是错误都会返回同一个新的监听器：ResponseListener，您可以在 ResponseListener 中直接判断参数 error(类型为 Exception) 是否为空指针，若 error == null 即请求成功。
+2) 提供额外方法setSSLInAssetsFileName()设置Https请求证书。
 
 ## 额外设置
 从 2.0.3 版本起可通过以下属性开启全局打印请求日志信息：
