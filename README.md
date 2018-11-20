@@ -44,23 +44,6 @@ implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.4'
 1) BaseOkHttp 在请求结束后，无论成功还是错误都会返回同一个新的监听器：ResponseListener，您可以在 ResponseListener 中直接判断参数 error(类型为 Exception) 是否为空指针，若 error == null 即请求成功。
 2) 提供额外方法setSSLInAssetsFileName()设置Https请求证书。
 
-## 额外设置
-从 2.0.3 版本起可通过以下属性开启全局打印请求日志信息：
-```
-HttpRequest.DEBUGMODE = true;
-```
-
-从 2.0.4 版本起可以通过以下代码设置全局请求服务器地址，其效果是会自动在所有请求地址前添加 serviceUrl 以减少重复代码量：
-```
-HttpRequest.serviceUrl = "http://www.xxx.com";
-```
-对于请求地址以 “http” 开头的，不进行添加 serviceUrl 的处理。
-
-从 2.1.4 版本起，可设置超时时间（默认10，单位：秒）：
-```
-HttpRequest.TIME_OUT_DURATION = 10;
-```
-
 ## 一般请求
 1) 快速使用：
 
@@ -242,6 +225,24 @@ HttpRequest.setResponseInterceptListener(new ResponseInterceptListener() {
     }
 });
 ```
+
+## 额外设置
+从 2.0.3 版本起可通过以下属性开启全局打印请求日志信息：
+```
+HttpRequest.DEBUGMODE = true;
+```
+
+从 2.0.4 版本起可以通过以下代码设置全局请求服务器地址，其效果是会自动在所有请求地址前添加 serviceUrl 以减少重复代码量：
+```
+HttpRequest.serviceUrl = "http://www.xxx.com";
+```
+对于请求地址以 “http” 开头的，不进行添加 serviceUrl 的处理。
+
+从 2.1.4 版本起，可设置超时时间（默认10，单位：秒）：
+```
+HttpRequest.TIME_OUT_DURATION = 10;
+```
+
 
 ## 开源协议
 ```
