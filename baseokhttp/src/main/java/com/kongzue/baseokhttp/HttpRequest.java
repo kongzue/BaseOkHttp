@@ -61,7 +61,10 @@ public class HttpRequest {
     private static boolean httpsVerifyServiceUrl = false;
     
     //全局拦截器
-    private static ResponseInterceptListener responseInterceptListener;
+    public static ResponseInterceptListener responseInterceptListener;
+    
+    //全局header
+    public static Parameter overallHeader;
     
     private Parameter headers;
     
@@ -81,37 +84,42 @@ public class HttpRequest {
         synchronized (HttpRequest.class) {
             HttpRequest httpRequest = new HttpRequest();
             httpRequest.context = context;
+            httpRequest.httpRequest = httpRequest;
             return httpRequest;
         }
     }
     
     //快速请求创建方法(POST请求)
-    public static void POST(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
-        POST(context, partUrl, null, parameter, listener);
+    public static HttpRequest POST(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
+        return POST(context, partUrl, null, parameter, listener);
     }
     
-    public static void POST(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
+    public static HttpRequest POST(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
         synchronized (HttpRequest.class) {
             HttpRequest httpRequest = new HttpRequest();
             httpRequest.context = context;
             httpRequest.headers = headers;
             httpRequest.listener = listener;
+            httpRequest.httpRequest = httpRequest;
             httpRequest.doRequest(partUrl, parameter, POST_REQUEST);
+            return httpRequest;
         }
     }
     
     //快速请求创建方法(GET请求)
-    public static void GET(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
-        GET(context, partUrl, null, parameter, listener);
+    public static HttpRequest GET(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
+        return GET(context, partUrl, null, parameter, listener);
     }
     
-    public static void GET(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
+    public static HttpRequest GET(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
         synchronized (HttpRequest.class) {
             HttpRequest httpRequest = new HttpRequest();
             httpRequest.context = context;
             httpRequest.headers = headers;
             httpRequest.listener = listener;
+            httpRequest.httpRequest = httpRequest;
             httpRequest.doRequest(partUrl, parameter, GET_REQUEST);
+            return httpRequest;
         }
     }
     
@@ -162,7 +170,13 @@ public class HttpRequest {
                 builder.url(postUrl);
                 builder.post(requestBody);
             }
+            
             //请求头处理
+            if (overallHeader != null && !overallHeader.entrySet().isEmpty()) {
+                for (Map.Entry<String, String> entry : overallHeader.entrySet()) {
+                    builder.addHeader(entry.getKey(), entry.getValue());
+                }
+            }
             if (headers != null && !headers.entrySet().isEmpty()) {
                 for (Map.Entry<String, String> entry : headers.entrySet()) {
                     builder.addHeader(entry.getKey(), entry.getValue());
@@ -367,11 +381,36 @@ public class HttpRequest {
         HttpRequest.httpsVerifyServiceUrl = httpsVerifyServiceUrl;
     }
     
-    public static ResponseInterceptListener getResponseInterceptListener() {
-        return responseInterceptListener;
-    }
-    
+    @Deprecated
     public static void setResponseInterceptListener(ResponseInterceptListener responseInterceptListener) {
         HttpRequest.responseInterceptListener = responseInterceptListener;
+    }
+    
+    //打印所有全局header
+    public static void printAllOverallHeaders() {
+        if (!DEBUGMODE) return;
+        if (overallHeader != null && !overallHeader.entrySet().isEmpty()) {
+            Log.i(">>>", "全局Header：");
+            for (Map.Entry<String, String> entry : overallHeader.entrySet()) {
+                Log.i(">>>", entry.getKey() + ":" + entry.getValue());
+            }
+        }
+    }
+    
+    //打印所有header
+    public void printAllHeaders() {
+        if (!DEBUGMODE) return;
+        if (overallHeader != null && !overallHeader.entrySet().isEmpty()) {
+            Log.i(">>>", "全局Header：");
+            for (Map.Entry<String, String> entry : overallHeader.entrySet()) {
+                Log.i(">>>", entry.getKey() + ":" + entry.getValue());
+            }
+        }
+        if (headers != null && !headers.entrySet().isEmpty()) {
+            Log.i(">>>", "局部Header：");
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                Log.i(">>>", entry.getKey() + ":" + entry.getValue());
+            }
+        }
     }
 }

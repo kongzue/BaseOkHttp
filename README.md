@@ -2,10 +2,10 @@
 OkHttp部分逻辑很蛋疼，在打通的Volley的情况下，对OkHttp进行了统一外部接口的二次封装，使用方式和BaseVolley (https://github.com/kongzue/BaseVolley) 完全一致
 
 <a href="https://github.com/kongzue/BaseOkHttp/">
-<img src="https://img.shields.io/badge/BaseOkHttp-2.1.4-green.svg" alt="BaseOkHttp">
+<img src="https://img.shields.io/badge/BaseOkHttp-2.1.5-green.svg" alt="BaseOkHttp">
 </a>
-<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.1.4/link">
-<img src="https://img.shields.io/badge/Maven-2.1.4-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BaseOkHttp/2.1.5/link">
+<img src="https://img.shields.io/badge/Maven-2.1.5-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -20,14 +20,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.baseokhttp</groupId>
   <artifactId>baseokhttp</artifactId>
-  <version>2.1.4</version>
+  <version>2.1.5</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.4'
+implementation 'com.kongzue.baseokhttp:baseokhttp:2.1.5'
 ```
 
 试用版可以前往 http://fir.im/BaseOkHttp 下载
@@ -210,20 +210,30 @@ multiFileRequest.getInstance(me).doPost("http://www.xxx.com/test", files, new Re
 });
 ```
 
+## 全局 Header 请求头
+使用如下代码设置全局 Header 请求头：
+```
+HttpRequest.overallHeader = new Parameter()
+        .add("Charset", "UTF-8")
+        .add("Content-Type", "application/json")
+        .add("Accept-Encoding", "gzip,deflate")
+;
+```
+
 ## 全局返回拦截器
 使用如下代码可以设置全局返回数据监听拦截器，return true 可返回请求继续处理，return false 即拦截掉不会继续返回原请求进行处理；
 ```
-HttpRequest.setResponseInterceptListener(new ResponseInterceptListener() {
+HttpRequest.responseInterceptListener = new ResponseInterceptListener() {
     @Override
     public boolean onResponse(String url, String response, Exception error) {
-        if (error!=null){
+        if (error != null) {
             return true;
-        }else{
-            Log.i("!!!", "onResponse: "+response);
+        } else {
+            Log.i("!!!", "onResponse: " + response);
             return true;
         }
     }
-});
+};
 ```
 
 ## 额外设置
@@ -279,6 +289,11 @@ limitations under the License.
 ```
 
 ## 更新日志：
+v2.1.5：
+- 全局拦截返回器设置方式允许直接设置，不再推荐使用set方法设置；
+- 新增全局 header 添加方式；
+- 新增全局 header 日志打印、所有 header的日志打印方式；
+
 v2.1.4：
 - 修复了一些 bug；
 - HttpRequest 新增带 headers 参数的 POST 和 GET 方法；

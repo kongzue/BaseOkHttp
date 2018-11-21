@@ -44,7 +44,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 resultHttp.setText("正在请求...");
                 HttpRequest.serviceUrl = "https://www.apiopen.top";
-                HttpRequest.setResponseInterceptListener(new ResponseInterceptListener() {
+                HttpRequest.overallHeader = new Parameter()
+                        .add("Charset", "UTF-8")
+                        .add("Content-Type", "application/json")
+                        .add("Accept-Encoding", "gzip,deflate")
+                ;
+                HttpRequest.responseInterceptListener = new ResponseInterceptListener() {
                     @Override
                     public boolean onResponse(String url, String response, Exception error) {
                         if (error != null) {
@@ -54,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
                             return true;
                         }
                     }
-                });
+                };
                 HttpRequest.POST(me, "/femaleNameApi", new Parameter()
                                          .add("page", "1")
                         , new ResponseListener() {
