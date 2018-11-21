@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.makeText(me, "请求失败", Toast.LENGTH_SHORT).show();
                                 }
                             }
-                        });
+                        }).printAllHeaders();
             }
         });
         

@@ -63,10 +63,13 @@ public class HttpRequest {
     //全局拦截器
     public static ResponseInterceptListener responseInterceptListener;
     
-    //全局header
+    //全局请求头
     public static Parameter overallHeader;
     
+    //请求头（单次请求内）
     private Parameter headers;
+    //请求参数
+    private Parameter parameter;
     
     private Context context;
     private ResponseListener listener;
@@ -100,8 +103,9 @@ public class HttpRequest {
             httpRequest.context = context;
             httpRequest.headers = headers;
             httpRequest.listener = listener;
+            httpRequest.parameter = parameter;
             httpRequest.httpRequest = httpRequest;
-            httpRequest.doRequest(partUrl, parameter, POST_REQUEST);
+            httpRequest.doRequest(partUrl, POST_REQUEST);
             return httpRequest;
         }
     }
@@ -117,8 +121,9 @@ public class HttpRequest {
             httpRequest.context = context;
             httpRequest.headers = headers;
             httpRequest.listener = listener;
+            httpRequest.parameter = parameter;
             httpRequest.httpRequest = httpRequest;
-            httpRequest.doRequest(partUrl, parameter, GET_REQUEST);
+            httpRequest.doRequest(partUrl, GET_REQUEST);
             return httpRequest;
         }
     }
@@ -135,8 +140,9 @@ public class HttpRequest {
     private String postUrl;
     private boolean isSending;
     
-    private void doRequest(final String url, final Parameter parameter, int requestType) {
+    private void doRequest(final String url, int requestType) {
         try {
+            if (parameter == null) parameter = new Parameter();
             
             if (SSLInAssetsFileName == null || SSLInAssetsFileName.isEmpty()) {
                 okHttpClient = new OkHttpClient();
@@ -403,13 +409,13 @@ public class HttpRequest {
         if (overallHeader != null && !overallHeader.entrySet().isEmpty()) {
             Log.i(">>>", "全局Header：");
             for (Map.Entry<String, String> entry : overallHeader.entrySet()) {
-                Log.i(">>>", entry.getKey() + ":" + entry.getValue());
+                Log.i(">>>>>>", entry.getKey() + ":" + entry.getValue());
             }
         }
         if (headers != null && !headers.entrySet().isEmpty()) {
             Log.i(">>>", "局部Header：");
             for (Map.Entry<String, String> entry : headers.entrySet()) {
-                Log.i(">>>", entry.getKey() + ":" + entry.getValue());
+                Log.i(">>>>>>", entry.getKey() + ":" + entry.getValue());
             }
         }
     }
