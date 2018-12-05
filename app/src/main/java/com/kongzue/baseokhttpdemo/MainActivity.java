@@ -1,5 +1,6 @@
 package com.kongzue.baseokhttpdemo;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.widget.Toast;
 
 import com.kongzue.baseokhttp.HttpRequest;
 import com.kongzue.baseokhttp.MultiFileRequest;
+import com.kongzue.baseokhttp.listener.ParameterInterceptListener;
 import com.kongzue.baseokhttp.listener.ResponseInterceptListener;
 import com.kongzue.baseokhttp.listener.ResponseListener;
 import com.kongzue.baseokhttp.util.Parameter;
@@ -51,13 +53,20 @@ public class MainActivity extends AppCompatActivity {
                 ;
                 HttpRequest.responseInterceptListener = new ResponseInterceptListener() {
                     @Override
-                    public boolean onResponse(String url, String response, Exception error) {
+                    public boolean onResponse(Context context, String url, String response, Exception error) {
                         if (error != null) {
                             return true;
                         } else {
                             Log.i("!!!", "onResponse: " + response);
                             return true;
                         }
+                    }
+                };
+                HttpRequest.parameterInterceptListener = new ParameterInterceptListener() {
+                    @Override
+                    public Parameter onIntercept(Parameter parameter) {
+                        parameter.add("key", "123");
+                        return parameter;
                     }
                 };
                 HttpRequest.POST(me, "/femaleNameApi", new Parameter()

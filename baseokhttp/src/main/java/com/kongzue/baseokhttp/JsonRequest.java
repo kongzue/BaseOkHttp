@@ -6,11 +6,13 @@ import android.util.Log;
 
 import com.kongzue.baseokhttp.exceptions.NetworkErrorException;
 import com.kongzue.baseokhttp.exceptions.TimeOutException;
-import com.kongzue.baseokhttp.listener.ParameterInterceptListener;
 import com.kongzue.baseokhttp.listener.ResponseInterceptListener;
 import com.kongzue.baseokhttp.listener.ResponseListener;
 import com.kongzue.baseokhttp.util.JsonFormat;
 import com.kongzue.baseokhttp.util.Parameter;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,116 +34,88 @@ import javax.net.ssl.TrustManagerFactory;
 import baseokhttp3.Cache;
 import baseokhttp3.Call;
 import baseokhttp3.Callback;
+import baseokhttp3.MediaType;
 import baseokhttp3.OkHttpClient;
 import baseokhttp3.RequestBody;
 
-/**
- * BaseOkHttp
- * Created by myzcx on 2017/12/27.
- * ver:2.0
- */
+import static com.kongzue.baseokhttp.HttpRequest.DEBUGMODE;
+import static com.kongzue.baseokhttp.HttpRequest.GET_REQUEST;
+import static com.kongzue.baseokhttp.HttpRequest.POST_REQUEST;
+import static com.kongzue.baseokhttp.HttpRequest.SSLInAssetsFileName;
+import static com.kongzue.baseokhttp.HttpRequest.TIME_OUT_DURATION;
+import static com.kongzue.baseokhttp.HttpRequest.httpsVerifyServiceUrl;
+import static com.kongzue.baseokhttp.HttpRequest.overallHeader;
+import static com.kongzue.baseokhttp.HttpRequest.overallParameter;
+import static com.kongzue.baseokhttp.HttpRequest.parameterInterceptListener;
+import static com.kongzue.baseokhttp.HttpRequest.responseInterceptListener;
+import static com.kongzue.baseokhttp.HttpRequest.serviceUrl;
 
-public class HttpRequest {
-    
-    //是否开启调试模式
-    public static boolean DEBUGMODE = false;
-    
-    //超时时长（单位：秒）
-    public static int TIME_OUT_DURATION = 10;
-    
-    //默认服务器地址
-    public static String serviceUrl = "";
-    
-    public static int GET_REQUEST = 1;
-    public static int POST_REQUEST = 0;
-    
-    //Https请求需要传入Assets目录下的证书文件名称
-    public static String SSLInAssetsFileName;
-    
-    //Https请求是否需要Hostname验证，请保证serviceUrl中即Hostname地址
-    public static boolean httpsVerifyServiceUrl = false;
-    
-    //全局拦截器
-    public static ResponseInterceptListener responseInterceptListener;
-    
-    //全局参数拦截器
-    public static ParameterInterceptListener parameterInterceptListener;
-    
-    //全局请求头
-    public static Parameter overallHeader;
-    
-    //全局参数
-    public static Parameter overallParameter;
+/**
+ * Author: @Kongzue
+ * Github: https://github.com/kongzue/
+ * Homepage: http://kongzue.com/
+ * Mail: myzcxhh@live.cn
+ * CreateTime: 2018/11/26 13:35
+ */
+public class JsonRequest {
     
     //请求头（单次请求内）
     private Parameter headers;
     //请求参数
-    private Parameter parameter;
+    private String parameter;
     
     private Context context;
     private ResponseListener listener;
     private OkHttpClient okHttpClient;
     
     //单例
-    private HttpRequest httpRequest;
+    private JsonRequest jsonRequest;
     
-    private HttpRequest() {
-    }
-    
-    //默认请求创建方法（不再推荐使用）
-    @Deprecated
-    public static HttpRequest getInstance(Context context) {
-        synchronized (HttpRequest.class) {
-            HttpRequest httpRequest = new HttpRequest();
-            httpRequest.context = context;
-            httpRequest.httpRequest = httpRequest;
-            return httpRequest;
-        }
+    private JsonRequest() {
     }
     
     //快速请求创建方法(POST请求)
-    public static HttpRequest POST(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
-        return POST(context, partUrl, null, parameter, listener);
-    }
-    
-    public static HttpRequest POST(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
-        synchronized (HttpRequest.class) {
-            HttpRequest httpRequest = new HttpRequest();
-            httpRequest.context = context;
-            httpRequest.headers = headers;
-            httpRequest.listener = listener;
-            httpRequest.parameter = parameter;
-            httpRequest.httpRequest = httpRequest;
-            httpRequest.doRequest(partUrl, POST_REQUEST);
-            return httpRequest;
+    public static JsonRequest POST(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
+        try {
+            return POST(context, partUrl, parameter.toParameterJson(), listener);
+        } catch (Exception e) {
+            if (DEBUGMODE) {
+                Log.e(">>>", "-------------------------------------");
+                Log.e(">>>", "创建请求失败:" + listener + " 不是正确的json格式参数");
+                Log.e(">>>", "=====================================");
+            }
+            return null;
         }
     }
     
-    //快速请求创建方法(GET请求)
-    public static HttpRequest GET(Context context, String partUrl, Parameter parameter, ResponseListener listener) {
-        return GET(context, partUrl, null, parameter, listener);
+    public static JsonRequest POST(Context context, String partUrl, JSONObject jsonParameter, ResponseListener listener) {
+        return POST(context, partUrl,  jsonParameter.toString(), listener);
     }
     
-    public static HttpRequest GET(Context context, String partUrl, Parameter headers, Parameter parameter, ResponseListener listener) {
-        synchronized (HttpRequest.class) {
-            HttpRequest httpRequest = new HttpRequest();
-            httpRequest.context = context;
-            httpRequest.headers = headers;
-            httpRequest.listener = listener;
-            httpRequest.parameter = parameter;
-            httpRequest.httpRequest = httpRequest;
-            httpRequest.doRequest(partUrl, GET_REQUEST);
-            return httpRequest;
+    public static JsonRequest POST(Context context, String partUrl, String jsonParameter, ResponseListener listener) {
+        try {
+            return POST(context, partUrl,null, jsonParameter, listener);
+        } catch (Exception e) {
+            if (DEBUGMODE) {
+                Log.e(">>>", "-------------------------------------");
+                Log.e(">>>", "创建请求失败:" + listener + " 不是正确的json格式参数");
+                Log.e(">>>", "=====================================");
+            }
+            return null;
         }
     }
     
-    public Parameter getHeaders() {
-        return headers;
-    }
-    
-    public HttpRequest setHeaders(Parameter headers) {
-        this.headers = headers;
-        return this;
+    public static JsonRequest POST(Context context, String partUrl, Parameter headers, String parameter, ResponseListener listener) {
+        synchronized (JsonRequest.class) {
+            JsonRequest jsonRequest = new JsonRequest();
+            jsonRequest.context = context;
+            jsonRequest.headers = headers;
+            jsonRequest.listener = listener;
+            jsonRequest.parameter = parameter;
+            jsonRequest.jsonRequest = jsonRequest;
+            jsonRequest.doRequest(partUrl, POST_REQUEST);
+            return jsonRequest;
+        }
     }
     
     private String postUrl;
@@ -149,19 +123,7 @@ public class HttpRequest {
     
     private void doRequest(final String url, int requestType) {
         try {
-            if (parameter == null) parameter = new Parameter();
-            
-            //全局参数
-            if (overallParameter != null && !overallParameter.entrySet().isEmpty()) {
-                for (Map.Entry<String, String> entry : overallParameter.entrySet()) {
-                    parameter.add(entry.getKey(), entry.getValue());
-                }
-            }
-            
-            //全局参数拦截处理
-            if (parameterInterceptListener != null) {
-                parameter = parameterInterceptListener.onIntercept(parameter);
-            }
+            if (parameter == null) parameter = "";
             
             if (SSLInAssetsFileName == null || SSLInAssetsFileName.isEmpty()) {
                 okHttpClient = new OkHttpClient();
@@ -178,23 +140,19 @@ public class HttpRequest {
             if (DEBUGMODE) {
                 Log.i(">>>", "-------------------------------------");
                 Log.i(">>>", "创建请求:" + postUrl);
-                Log.i(">>>", "参数:" + parameter.toParameterString());
+                Log.i(">>>", "参数:" + parameter);
                 Log.i(">>>", "请求已发送 ->");
             }
             
-            RequestBody requestBody = parameter.toOkHttpParameter();
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), parameter);
             
             //创建请求
             baseokhttp3.Request request;
             baseokhttp3.Request.Builder builder = new baseokhttp3.Request.Builder();
             
             //请求类型处理
-            if (requestType == GET_REQUEST) {
-                builder.url(postUrl + "?" + parameter.toParameterString());
-            } else {
-                builder.url(postUrl);
-                builder.post(requestBody);
-            }
+            builder.url(postUrl);
+            builder.post(requestBody);
             
             //请求头处理
             if (overallHeader != null && !overallHeader.entrySet().isEmpty()) {
@@ -222,7 +180,7 @@ public class HttpRequest {
                     isSending = false;
                     if (DEBUGMODE) {
                         Log.e(">>>", "请求失败:" + finalPostUrl);
-                        Log.e(">>>", "参数:" + parameter.toParameterString());
+                        Log.e(">>>", "参数:" + parameter);
                         Log.e(">>>", "错误:" + e.toString());
                         Log.e(">>>", "=====================================");
                     }
@@ -263,7 +221,7 @@ public class HttpRequest {
                     final String strResponse = response.body().string();
                     if (DEBUGMODE) {
                         Log.i(">>>", "请求成功:" + finalPostUrl);
-                        Log.i(">>>", "参数:" + parameter.toParameterString());
+                        Log.i(">>>", "参数:" + parameter);
                         Log.i(">>>", "返回内容:");
                         if (!JsonFormat.formatJson(strResponse)) {
                             Log.i(">>>", strResponse);

@@ -29,6 +29,8 @@ import baseokhttp3.Response;
 import static com.kongzue.baseokhttp.HttpRequest.DEBUGMODE;
 import static com.kongzue.baseokhttp.HttpRequest.TIME_OUT_DURATION;
 import static com.kongzue.baseokhttp.HttpRequest.overallHeader;
+import static com.kongzue.baseokhttp.HttpRequest.overallParameter;
+import static com.kongzue.baseokhttp.HttpRequest.parameterInterceptListener;
 import static com.kongzue.baseokhttp.HttpRequest.responseInterceptListener;
 import static com.kongzue.baseokhttp.HttpRequest.serviceUrl;
 
@@ -68,18 +70,30 @@ public class MultiFileRequest {
     
     //快速请求创建方法
     public static MultiFileRequest POST(Activity a, String partUrl, List<File> files, ResponseListener listener) {
-        return POST(a, partUrl, null, null, files, listener, MediaType.parse("image/png"));
+        return POST(a, partUrl, null, null, files, null, listener, MediaType.parse("image/png"));
+    }
+    
+    public static MultiFileRequest POST(Activity a, String partUrl, List<File> files, List<String> fileNames, ResponseListener listener) {
+        return POST(a, partUrl, null, null, files, fileNames, listener, MediaType.parse("image/png"));
     }
     
     public static MultiFileRequest POST(Activity a, String partUrl, Parameter parameter, List<File> files, ResponseListener listener) {
-        return POST(a, partUrl, null, parameter, files, listener, MediaType.parse("image/png"));
+        return POST(a, partUrl, null, parameter, files, null, listener, MediaType.parse("image/png"));
+    }
+    
+    public static MultiFileRequest POST(Activity a, String partUrl, Parameter parameter, List<File> files, List<String> fileNames, ResponseListener listener) {
+        return POST(a, partUrl, null, parameter, files, fileNames, listener, MediaType.parse("image/png"));
     }
     
     public static MultiFileRequest POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, ResponseListener listener) {
-        return POST(a, partUrl, null, parameter, files, listener, MediaType.parse("image/png"));
+        return POST(a, partUrl, null, parameter, files, null, listener, MediaType.parse("image/png"));
     }
     
-    public static MultiFileRequest POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, ResponseListener listener, MediaType MEDIA_TYPE) {
+    public static MultiFileRequest POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, List<String> fileNames, ResponseListener listener) {
+        return POST(a, partUrl, null, parameter, files, fileNames, listener, MediaType.parse("image/png"));
+    }
+    
+    public static MultiFileRequest POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, List<String> fileNames, ResponseListener listener, MediaType MEDIA_TYPE) {
         synchronized (MultiFileRequest.class) {
             multiFileRequest = new MultiFileRequest();
             multiFileRequest.activity = a;
@@ -87,6 +101,7 @@ public class MultiFileRequest {
             multiFileRequest.headers = headers;
             multiFileRequest.MEDIA_TYPE = MEDIA_TYPE;
             multiFileRequest.responseListener = listener;
+            multiFileRequest.fileNames = fileNames;
             multiFileRequest.doPost(partUrl, files, listener);
             return multiFileRequest;
         }
@@ -125,6 +140,19 @@ public class MultiFileRequest {
     
     public void doPost(String url, List<File> files, final ResponseListener listener) {
         
+        if (parameter == null) parameter = new Parameter();
+        //全局参数拦截处理
+        if (parameterInterceptListener != null) {
+            parameter = parameterInterceptListener.onIntercept(parameter);
+        }
+        
+        //全局参数
+        if (overallParameter != null && !overallParameter.entrySet().isEmpty()) {
+            for (Map.Entry<String, String> entry : overallParameter.entrySet()) {
+                parameter.add(entry.getKey(), entry.getValue());
+            }
+        }
+        
         postUrl = url;
         if (!postUrl.startsWith("http")) {
             postUrl = serviceUrl + postUrl;
@@ -147,11 +175,9 @@ public class MultiFileRequest {
             }
         }
         
-        if (parameter != null) {
-            if (!parameter.entrySet().isEmpty()) {
-                for (Map.Entry<String, String> entry : parameter.entrySet()) {
-                    builder.addFormDataPart(entry.getKey(), entry.getValue());
-                }
+        if (!parameter.entrySet().isEmpty()) {
+            for (Map.Entry<String, String> entry : parameter.entrySet()) {
+                builder.addFormDataPart(entry.getKey(), entry.getValue());
             }
         }
         
@@ -202,7 +228,7 @@ public class MultiFileRequest {
                     @Override
                     public void run() {
                         if (responseInterceptListener != null) {
-                            if (responseInterceptListener.onResponse(postUrl, null, new NetworkErrorException())) {
+                            if (responseInterceptListener.onResponse(activity, postUrl, null, new NetworkErrorException())) {
                                 if (listener != null)
                                     listener.onResponse(null, new NetworkErrorException());
                             }
@@ -233,7 +259,7 @@ public class MultiFileRequest {
                     @Override
                     public void run() {
                         if (responseInterceptListener != null) {
-                            if (responseInterceptListener.onResponse(postUrl, result, null)) {
+                            if (responseInterceptListener.onResponse(activity, postUrl, result, null)) {
                                 if (listener != null)
                                     listener.onResponse(result, null);
                             }

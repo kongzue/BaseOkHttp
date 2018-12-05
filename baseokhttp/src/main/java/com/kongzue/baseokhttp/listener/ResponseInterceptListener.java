@@ -1,5 +1,7 @@
 package com.kongzue.baseokhttp.listener;
 
+import android.content.Context;
+
 /**
  * Author: @Kongzue
  * Github: https://github.com/kongzue/
@@ -8,5 +10,5 @@ package com.kongzue.baseokhttp.listener;
  * CreateTime: 2018/7/5 18:24
  */
 public interface ResponseInterceptListener {
-    boolean onResponse(String url,String response, Exception error);
+    boolean onResponse(Context context, String url, String response, Exception error);
 }

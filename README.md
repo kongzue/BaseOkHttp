@@ -171,6 +171,9 @@ MultiFileRequest.POST(Activity a, String partUrl, Parameter headers, Parameter p
 //默认情况下，MultiFileRequest发送的文件类型为 image/png ，需要额外的修改为上传文件类型：
 MediaType MEDIA_TYPE = MediaType.parse("image/png");
 MultiFileRequest.POST(Activity a, String partUrl, Parameter headers, Parameter parameter, List<File> files, ResponseListener listener, MediaType MEDIA_TYPE);
+
+//需要独立设置上传的文件名，可以在 files 参数后设置List<String> fileNames：
+MultiFileRequest.POST(Activity a, String partUrl, Parameter parameter, List<File> files, List<String> fileNames, ResponseListener listener);
 ```
 
 2) ~~多图片表单上传（已过时）~~
@@ -220,12 +223,33 @@ HttpRequest.overallHeader = new Parameter()
 ;
 ```
 
+## 全局请求参数
+使用如下代码设置全局 Header 请求头：
+```
+HttpRequest.overallParameter = new Parameter()
+        .add("token", "A128wF4d")
+;
+```
+
+## 全局参数拦截器
+使用如下代码可以设置全局参数监听拦截器：
+```
+HttpRequest.parameterInterceptListener = new ParameterInterceptListener() {
+    @Override
+    public Parameter onIntercept(Parameter parameter) {
+        parameter.add("key", "123");
+        return parameter;
+    }
+};
+```
+此参数拦截器可以拦截并修改、新增所有请求携带的参数。
+
 ## 全局返回拦截器
 使用如下代码可以设置全局返回数据监听拦截器，return true 可返回请求继续处理，return false 即拦截掉不会继续返回原请求进行处理；
 ```
 HttpRequest.responseInterceptListener = new ResponseInterceptListener() {
     @Override
-    public boolean onResponse(String url, String response, Exception error) {
+    public boolean onResponse(Context context, String url, String response, Exception error) {
         if (error != null) {
             return true;
         } else {
@@ -289,6 +313,14 @@ limitations under the License.
 ```
 
 ## 更新日志：
+v2.1.7：
+此版本为 BaseOkHttp 2.x 最后一个稳定版本。
+- 新增 JsonRequest 可发送 json 类型的请求；
+- HttpRequest 新增全局参数 overallParameter 和全局参数拦截器 parameterInterceptListener；
+- MultiFileRequest 新增全局参数 overallParameter 和全局参数拦截器 parameterInterceptListener；
+- MultiFileRequest 新增请求参数 fileNames 用于独立设置上传文件的名称。
+- 对全局返回拦截器进行了修改，新增返回参数 context 以方便需要上下文索引的操作。
+
 v2.1.6：
 - MultiFileRequest 新增增强型日志；
 - MultiFileRequest 新增全局拦截器和全局请求头支持；
